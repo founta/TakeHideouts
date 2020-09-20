@@ -1,0 +1,26 @@
+<Module>
+     <Name value="Take Hideouts"/>
+     <Id value="TakeHideouts"/>
+     <Version value="v0.1.0"/>
+     <SingleplayerModule value="true"/>
+     <MultiplayerModule value="false"/>
+     <DependedModules>
+         <DependedModule Id="Native"/>
+         <DependedModule Id="SandBoxCore"/>
+         <DependedModule Id="Sandbox"/>
+         <DependedModule Id="CustomBattle"/>
+         <DependedModule Id="StoryMode" />
+     </DependedModules>
+     <SubModules>
+         <SubModule>
+             <Name value="TakeHideouts"/>
+             <DLLName value="TakeHideouts.dll"/>
+             <SubModuleClassType value="TakeHideouts.TakeHideoutsMain"/>
+             <Tags>
+                 <Tag key="DedicatedServerType" value="none" />
+                 <Tag key="IsNoRenderModeElement" value="false" />
+             </Tags>
+         </SubModule>
+     </SubModules>
+     <Xmls/>
+ </Module>
