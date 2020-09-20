@@ -150,7 +150,6 @@ namespace TakeHideouts
         {
           party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause
           //party.Party.Owner = Hero.MainHero; //this makes it so that you can see them in the clan menu
-
           //party.HomeSettlement = hideout.Settlement; //likely already set to this, doesn't seem to do anything
 
           //remove from war party list so that these bandits don't use up party slots
@@ -158,14 +157,6 @@ namespace TakeHideouts
         }
 
       }
-
-      //disable attack hideout
-      //InformationManager.DisplayMessage(new InformationMessage(Campaign.Current.GameMenuManager.NextMenu.GetMenuOptionText(0).ToString()));
-      //GameMenu currentMenu = (Game.Current.GameStateManager.ActiveState as MapState).MenuContext.GameMenu;
-      //InformationManager.DisplayMessage(new InformationMessage(currentMenu.GetMenuOptionText(0).ToString()));
-      //.GetGameMenuOption(0).SetEnable(false);
-      //currentMenu.GetGameMenuOption(0).SetEnable(false);
-      //InformationManager.DisplayMessage(new InformationMessage(currentMenu.GetGameMenuOption(0).IsEnabled.ToString()));
 
       //re-open hideout menu
       //actually closes the game menu but I don't make the main hero leave the settlement so it just re-opens
@@ -196,9 +187,6 @@ namespace TakeHideouts
         }
       }
 
-      //enable attack hideout
-      //Campaign.Current.GameMenuManager.NextMenu.GetGameMenuOption(0).SetEnable(false);
-
       //re-opens hideout menu
       Campaign.Current.GameMenuManager.ExitToLast();
       return;
@@ -227,27 +215,6 @@ namespace TakeHideouts
     private void hideout_troops_consequence(MenuCallbackArgs args)
     {
       ref Hideout hideout = ref Settlement.CurrentSettlement.Hideout;
-
-      //This puts your troops in the bandit boss party. Wasn't good, could only hold 20 troops
-      /*
-      //find the bandit boss leader party; we know he doesn't leave the base so use that party to store troops
-      MobileParty party = null;
-      foreach (MobileParty p in hideout.Settlement.Parties)
-      {
-        if (p.IsBanditBossParty)
-        {
-          party = p;
-          break;
-        }
-      }
-
-      if (party == (MobileParty) null) //then something's wrong, print a message and abort
-      {
-        InformationManager.DisplayMessage(new InformationMessage("TakeHideouts: Bandit boss party does not exist -- cannot store troops. Hideout will likely be destroyed soon"));
-        return;
-      }
-      PartyScreenManager.OpenScreenAsManageTroops(party);
-      */
 
       //Allows putting troops in the settlement's party object. Appears to persist across saving/loading
       PartyScreenManager.OpenScreenAsLoot(hideout.Settlement.Party);
