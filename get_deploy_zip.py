@@ -18,7 +18,7 @@ full_bindir = basedir / partial_bindir_str
 full_bindir.mkdir(parents=True, exist_ok=True)
 
 #copy targets into directory structure
-bin_source_dir = Path("TakeHideouts/bin/Release")
+bin_source_dir = Path("TakeHideouts/")
 base_source_dir = Path("TakeHideouts/")
 
 zip_targets = []
@@ -33,8 +33,6 @@ for target in base_targets:
   destination = basedir / target
   copyfile(base_source_dir / target, basedir / target)
   zip_targets.append(destination)
-
-print(modules.absolute())
 
 #zip up the directory
 z = ZipFile("TakeHideouts.zip", 'w', compression=ZIP_DEFLATED)

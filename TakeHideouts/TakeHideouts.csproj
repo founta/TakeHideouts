@@ -223,4 +223,8 @@
     <Compile Include="TakeHideouts.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>COPY "$(TargetPath)" "$(ProjectDir)$(TargetFileName)"
+COPY "$(TargetDir)0Harmony.dll" "$(ProjectDir)0Harmony.dll"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

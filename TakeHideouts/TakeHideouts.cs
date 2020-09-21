@@ -146,7 +146,30 @@ namespace TakeHideouts
 
     private void hideout_claim_consequence(MenuCallbackArgs args)
     {
-      ref Hideout hideout = ref Settlement.CurrentSettlement.Hideout;
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+
+      //compute cost of taking the hideout (one month's worth of the inhabitants' wages)
+      //TODO make this configurable. Modlib or something
+      int totalWages = 0;
+      foreach (MobileParty party in hideout.Settlement.Parties)
+      {
+        if (party.IsBandit || party.IsBanditBossParty)
+          totalWages += party.GetTotalWage();
+      }
+      int hideoutCost = 30 * totalWages + 1000;
+
+      //truncate cost to the nearest thousand
+      hideoutCost = (int) (hideoutCost / 1000);
+      hideoutCost *= 1000;
+
+      bool canPurchase = Hero.MainHero.Gold >= hideoutCost;
+
+      string inquiryText = $"You ask the bandit leader how much it would cost to employ his camp's services. He considers the benefit of allying " +
+        $"with {Hero.MainHero.Clan.Name.ToString()} and names his price -- {hideoutCost} Denars";
+      if (!canPurchase)
+        inquiryText += "\nYou cannot afford this hideout";
+
+      string inquiryTitle = "Purchase Hideout";
 
       //set our main hero as the new owener of the hideout (not needed)
       //hideout.Settlement.Party.Owner = Hero.MainHero;
@@ -154,42 +177,50 @@ namespace TakeHideouts
       //This appears to default false for hideouts and doesn't appear to change anything
       //for the hideouts. hopefully changing it doesn't break anything
       //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
-      hideout.IsTaken = true;
-
-      foreach (MobileParty party in hideout.Settlement.Parties)
+      Action inquiryAffirmative = () => 
       {
-        if (party.IsBandit) //don't change the main party
+        Hero.MainHero.ChangeHeroGold(-hideoutCost);
+
+        hideout.IsTaken = true;
+
+        foreach (MobileParty party in hideout.Settlement.Parties)
         {
-          //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
-          //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
-
-          party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause
-          //party.Party.Owner = Hero.MainHero; //this makes it so that you can see them in the clan menu
-          party.HomeSettlement = hideout.Settlement; //likely already set to this, doesn't seem to do anything
-
-          //Tell everyone except the bandit boss to patrol around the hideout
-          if (!party.IsBanditBossParty)
+          if (party.IsBandit) //don't change the main party
           {
-            //party.SetMoveDefendSettlement(party.HomeSettlement);
-            party.SetMovePatrolAroundSettlement(party.HomeSettlement);
+            //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
+            //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
+
+            party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause
+            //party.Party.Owner = Hero.MainHero; //this makes it so that you can see them in the clan menu
+            party.HomeSettlement = hideout.Settlement; //likely already set to this, doesn't seem to do anything
+
+            //Tell everyone except the bandit boss to patrol around the hideout
+            if (!party.IsBanditBossParty)
+            {
+              //party.SetMoveDefendSettlement(party.HomeSettlement);
+              party.SetMovePatrolAroundSettlement(party.HomeSettlement);
+            }
+
+            //remove from war party list so that these bandits don't use up party slots
+            ExposeInternals.RemoveWarPartyInternal(party.ActualClan, party);
           }
 
-          //remove from war party list so that these bandits don't use up party slots
-          ExposeInternals.RemoveWarPartyInternal(party.ActualClan, party);
         }
 
-      }
+        //re-open hideout menu
+        //actually closes the game menu but I don't make the main hero leave the settlement so it just re-opens
+        Campaign.Current.GameMenuManager.ExitToLast(); //leaves inquiry
+        Campaign.Current.GameMenuManager.ExitToLast(); //re-opens hideout menu
 
-      //re-open hideout menu
-      //actually closes the game menu but I don't make the main hero leave the settlement so it just re-opens
-      Campaign.Current.GameMenuManager.ExitToLast(); //re-opens hideout menu
+        //found this in one of the DLLs should update map color?
+        //doesnt really do anything
+        //hideout.Settlement.Party.Visuals.SetMapIconAsDirty();
 
-      //found this in one of the DLLs should update map color?
-      //doesnt really do anything
-      //hideout.Settlement.Party.Visuals.SetMapIconAsDirty();
+        //update hideout's appearance on map. Also gives a notification that you're the new owner
+        ChangeOwnerOfSettlementAction.ApplyByBarter(Hero.MainHero, hideout.Settlement);
+      };
 
-      //update hideout's appearance on map. Also gives a notification that you're the new owner
-      ChangeOwnerOfSettlementAction.ApplyByBarter(Hero.MainHero, hideout.Settlement);
+      InformationManager.ShowInquiry(new InquiryData(inquiryTitle, inquiryText, canPurchase, true, "Purchase", "Leave", inquiryAffirmative, null));
 
       return;
     }
