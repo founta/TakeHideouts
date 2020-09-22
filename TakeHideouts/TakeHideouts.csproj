@@ -225,6 +225,10 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>COPY "$(TargetPath)" "$(ProjectDir)$(TargetFileName)"
-COPY "$(TargetDir)0Harmony.dll" "$(ProjectDir)0Harmony.dll"</PostBuildEvent>
+COPY "$(TargetDir)0Harmony.dll" "$(ProjectDir)0Harmony.dll"
+</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>COPY "$(ProjectDir)SubModule.xml" "$(TargetDir)../../SubModule.xml"</PreBuildEvent>
   </PropertyGroup>
 </Project>

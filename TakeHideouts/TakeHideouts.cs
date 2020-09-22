@@ -13,6 +13,7 @@ using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
 
+
 using System.Xml;
 
 using HarmonyLib;
@@ -124,10 +125,13 @@ namespace TakeHideouts
     }
   }
 
+  //TODO break this out into more logical, separate classes
   public class ClaimHideout_behavior : CampaignBehaviorBase
   {
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
+      campaignGameStarter.AddGameMenuOption("hideout_place", "recruit", "Recruit Troops", hideout_recruit_access_condition, hideout_recruit_consequence);
+
       campaignGameStarter.AddGameMenuOption("hideout_place", "claim", "Claim Hideout", hideout_claim_access_condition, hideout_claim_consequence, true);
 
       campaignGameStarter.AddGameMenuOption("hideout_place", "stash", "Access Stash", hideout_stash_access_condition, hideout_stash_consequence);
@@ -137,9 +141,43 @@ namespace TakeHideouts
       campaignGameStarter.AddGameMenuOption("hideout_place", "abandon", "Abandon Hideout", hideout_abandon_access_condition, hideout_abandon_consequence, true);
     }
 
-    private bool hideout_claim_access_condition(MenuCallbackArgs args)
+    private bool hideout_recruit_access_condition(MenuCallbackArgs args)
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
+
+      return true;
+    }
+
+    private void hideout_recruit_consequence(MenuCallbackArgs args)
+    {
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+      List<InquiryElement> elements = new List<InquiryElement>();
+
+      int banditPartyCounter = 1;
+      foreach (MobileParty party in hideout.Settlement.Parties)
+      {
+        if (!party.IsBanditBossParty && (party != MobileParty.MainParty))
+        {
+          elements.Add(
+            new InquiryElement(
+              (object)party,
+              $"Bandit party {banditPartyCounter++}",
+              new ImageIdentifier(CharacterCode.CreateFrom(party.Party.MemberRoster.ElementAt(0).Character)) //show sweet image of first troop
+              )
+            );
+        }
+      }
+
+      InformationManager.ShowMultiSelectionInquiry(
+        new MultiSelectionInquiryData("Choose bandit party to recruit from", "", elements, true, 1, 
+                                      "Select Troops", "Leave", this.inquiry_recruit_troops, this.inquiry_do_nothing));
+
+      return;
+    }
+
+    private bool hideout_claim_access_condition(MenuCallbackArgs args)
+    {
+      args.optionLeaveType = GameMenuOption.LeaveType.RansomAndBribe;
 
       return !Settlement.CurrentSettlement.Hideout.IsTaken; //can only claim it if it is not already taken
     }
@@ -156,31 +194,32 @@ namespace TakeHideouts
         if (party.IsBandit || party.IsBanditBossParty)
           totalWages += party.GetTotalWage();
       }
-      int hideoutCost = 30 * totalWages + 1000;
+      int hideoutCost = 30 * totalWages + 1000; //min cost is 1000
 
       //truncate cost to the nearest thousand
+      // -= hideoutCost % 1000 would be better maybe but who cares
       hideoutCost = (int) (hideoutCost / 1000);
       hideoutCost *= 1000;
 
       bool canPurchase = Hero.MainHero.Gold >= hideoutCost;
 
       string inquiryText = $"You ask the bandit leader how much it would cost to employ his camp's services. He considers the benefit of allying " +
-        $"with {Hero.MainHero.Clan.Name.ToString()} and names his price -- {hideoutCost} Denars";
+        $"with {Hero.MainHero.Clan.Name.ToString()} and names his price -- {hideoutCost} Denars"; //TODO use the cool denar image thing
       if (!canPurchase)
-        inquiryText += "\nYou cannot afford this hideout";
+        inquiryText += "\n\nYou cannot afford this hideout";
 
       string inquiryTitle = "Purchase Hideout";
 
       //set our main hero as the new owener of the hideout (not needed)
       //hideout.Settlement.Party.Owner = Hero.MainHero;
 
-      //This appears to default false for hideouts and doesn't appear to change anything
-      //for the hideouts. hopefully changing it doesn't break anything
-      //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
       Action inquiryAffirmative = () => 
       {
-        Hero.MainHero.ChangeHeroGold(-hideoutCost);
+        Hero.MainHero.ChangeHeroGold(-hideoutCost); //TODO message like "you paid $(cost)"
 
+        //This appears to default false for hideouts and doesn't appear to change anything
+        //for the hideouts. hopefully changing it doesn't break anything
+        //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
         hideout.IsTaken = true;
 
         foreach (MobileParty party in hideout.Settlement.Parties)
@@ -190,7 +229,7 @@ namespace TakeHideouts
             //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
             //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
 
-            party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause
+            party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause (is this the right way to do this?)
             //party.Party.Owner = Hero.MainHero; //this makes it so that you can see them in the clan menu
             party.HomeSettlement = hideout.Settlement; //likely already set to this, doesn't seem to do anything
 
@@ -201,15 +240,18 @@ namespace TakeHideouts
               party.SetMovePatrolAroundSettlement(party.HomeSettlement);
             }
 
-            //remove from war party list so that these bandits don't use up party slots
+            //remove from player's war party list so that these bandits don't use up party slots
+            //is there an actual way to do this (that's not an internal method)?? Users report
+            //that bandit groups still use up slots sometimes but the issue is fixed on 
+            //abandoning/re-claiming hideout.
             ExposeInternals.RemoveWarPartyInternal(party.ActualClan, party);
           }
 
         }
 
         //re-open hideout menu
-        //actually closes the game menu but I don't make the main hero leave the settlement so it just re-opens
-        Campaign.Current.GameMenuManager.ExitToLast(); //leaves inquiry
+        //actually closes the game menu but I don't make the main party leave the settlement so it just re-opens
+        Campaign.Current.GameMenuManager.ExitToLast(); //leaves inquiry?
         Campaign.Current.GameMenuManager.ExitToLast(); //re-opens hideout menu
 
         //found this in one of the DLLs should update map color?
@@ -220,6 +262,7 @@ namespace TakeHideouts
         ChangeOwnerOfSettlementAction.ApplyByBarter(Hero.MainHero, hideout.Settlement);
       };
 
+      //shows the option to buy the hideout
       InformationManager.ShowInquiry(new InquiryData(inquiryTitle, inquiryText, canPurchase, true, "Purchase", "Leave", inquiryAffirmative, null));
 
       return;
@@ -302,6 +345,86 @@ namespace TakeHideouts
     {
       PartyScreenManager.OpenScreenAsManagePrisoners();
       return;
+    }
+
+    private void inquiry_recruit_troops(List<InquiryElement> party_list)
+    {
+      if (party_list.Count == 0)
+        return;
+      MobileParty party = (MobileParty)party_list[0].Identifier;
+
+      //get cost of party before stripping by player
+      //int party_wages = party.GetTotalWage();
+
+      //PartyScreenMode.Loot;
+      //PartyScreenLogic.PartyRosterSide
+      //PartyScreenManager.OpenScreenWithCondition(); //TODO figure out what this is? Won't work, uses dummy roster as target
+      this.OpenPartyScreenAsBuyTroops(party.Party);
+      //PartyScreenManager.OpenScreenAsLoot(party.Party);
+      //get cost of party afterwards?? if it still exists... hopefully works, we'll see
+      //int new_wages = party.GetTotalWage();
+
+      //charge the player. just 5 days of troop wages, probably balanced. TODO configure
+      //uhh TODO check if player has money for this. for now just kind of assume they do
+      //what if they dont? how do I put the troops back...?
+      //int player_cost = (party_wages - new_wages) * 5;
+      //Hero.MainHero.ChangeHeroGold(-player_cost);
+
+
+
+      //charge player in the recruit troops consequence?
+      //TODO tell player how much these suckers are going to cost?
+    }
+
+      private void inquiry_do_nothing(List<InquiryElement> elements)
+    {
+      return;
+    }
+
+    //This is horrifying
+    private void OpenPartyScreenAsBuyTroops(PartyBase partyToBuyFrom)
+    {
+      //get access to private _currentMode and _partyScreenLogic from PartyScreenManager
+      ref PartyScreenMode currentMode = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenMode>(PartyScreenManager.Instance, "_currentMode");
+      ref PartyScreenLogic partyScreenLogic = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenLogic>(PartyScreenManager.Instance, "_partyScreenLogic");
+
+      currentMode = PartyScreenMode.Ransom; //please enable troop buying and selling. Yeah it doesn't. Neither does transferable with trade. Figure out later.
+      partyScreenLogic = new PartyScreenLogic();
+      partyScreenLogic.Initialize(partyToBuyFrom, MobileParty.MainParty, new TaleWorlds.Localization.TextObject("Recruit Bandits"));
+      partyScreenLogic.InitializeTrade(PartyScreenLogic.TransferState.TransferableWithTrade, PartyScreenLogic.TransferState.NotTransferable, PartyScreenLogic.TransferState.NotTransferable);
+      partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate));
+      partyScreenLogic.SetDoneHandler(new PartyPresentationDoneButtonDelegate(this.recruitDoneHandler));
+      partyScreenLogic.Parties[0].Add(partyToBuyFrom.MobileParty); //this is really all I needed to do?
+      PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
+      state.InitializeLogic(partyScreenLogic);
+      Game.Current.GameStateManager.PushState((GameState)state);
+    }
+
+    //kill the party if no more troops (if buy troops screen doesn't...)
+    //probably doesn't, since it takes a PartyBase
+    private bool recruitDoneHandler(
+      TroopRoster leftMemberRoster,
+      TroopRoster leftPrisonRoster,
+      TroopRoster rightMemberRoster,
+      TroopRoster rightPrisonRoster,
+      bool isForced,
+      List<MobileParty> leftParties = null,
+      List<MobileParty> rigthParties = null)
+    {
+      //assuming only one left party
+      if (leftParties != null)
+      {
+        if (leftParties.Count != 0)
+        {
+          if (leftParties[0].MemberRoster.Count == 0)
+            leftParties[0].RemoveParty();
+        }
+        else
+        {
+          InformationManager.DisplayMessage(new InformationMessage($"left party count zero. whyyy"));
+        }
+      }
+      return true;
     }
 
     //dunno what these do
