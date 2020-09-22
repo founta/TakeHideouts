@@ -45,6 +45,23 @@ namespace TakeHideouts
     }
   }
 
+  //patch Hideout Mapfaction getter to correctly set hideout's mapfaction
+  //after we take the hideout
+  [HarmonyPatch(typeof(PartyScreenLogic), "TransferTroop")]
+  public class TakeHideoutsTransferTroopPatch
+  {
+    static void Postfix(PartyScreenLogic __instance, PartyScreenLogic.PartyCommand command)
+    {
+      if (__instance.MemberTransferState == PartyScreenLogic.TransferState.TransferableWithTrade && command.Type == PartyScreenLogic.TroopType.Member)
+      {
+        if (command.RosterSide == PartyScreenLogic.PartyRosterSide.Right)
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount + command.Character.PrisonerRansomValue(Hero.MainHero) * command.TotalNumber);
+        else
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount - command.Character.PrisonerRansomValue(Hero.MainHero) * command.TotalNumber);
+      }
+    }
+  }
+
   //patch 'Wait until nightfall' on_condition to disable attacking the hideout
   //if we own the hideout
   [HarmonyPatch(typeof(HideoutCampaignBehavior), "game_menu_wait_until_nightfall_on_condition")]
@@ -74,6 +91,13 @@ namespace TakeHideouts
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(Clan), "RemoveWarPartyInternal")]
     public static void RemoveWarPartyInternal(Clan instance, MobileParty warparty)
+    {
+      return;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(PartyScreenLogic), "SetPartyGoldChangeAmount")]
+    public static void SetPartyGoldChangeAmount(PartyScreenLogic instance, int newTotalAmount)
     {
       return;
     }
@@ -351,29 +375,9 @@ namespace TakeHideouts
     {
       if (party_list.Count == 0)
         return;
-      MobileParty party = (MobileParty)party_list[0].Identifier;
+      MobileParty party = (MobileParty)party_list[0].Identifier; //only one element
 
-      //get cost of party before stripping by player
-      //int party_wages = party.GetTotalWage();
-
-      //PartyScreenMode.Loot;
-      //PartyScreenLogic.PartyRosterSide
-      //PartyScreenManager.OpenScreenWithCondition(); //TODO figure out what this is? Won't work, uses dummy roster as target
       this.OpenPartyScreenAsBuyTroops(party.Party);
-      //PartyScreenManager.OpenScreenAsLoot(party.Party);
-      //get cost of party afterwards?? if it still exists... hopefully works, we'll see
-      //int new_wages = party.GetTotalWage();
-
-      //charge the player. just 5 days of troop wages, probably balanced. TODO configure
-      //uhh TODO check if player has money for this. for now just kind of assume they do
-      //what if they dont? how do I put the troops back...?
-      //int player_cost = (party_wages - new_wages) * 5;
-      //Hero.MainHero.ChangeHeroGold(-player_cost);
-
-
-
-      //charge player in the recruit troops consequence?
-      //TODO tell player how much these suckers are going to cost?
     }
 
       private void inquiry_do_nothing(List<InquiryElement> elements)
@@ -392,7 +396,7 @@ namespace TakeHideouts
       partyScreenLogic = new PartyScreenLogic();
       partyScreenLogic.Initialize(partyToBuyFrom, MobileParty.MainParty, new TaleWorlds.Localization.TextObject("Recruit Bandits"));
       partyScreenLogic.InitializeTrade(PartyScreenLogic.TransferState.TransferableWithTrade, PartyScreenLogic.TransferState.NotTransferable, PartyScreenLogic.TransferState.NotTransferable);
-      partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate));
+      partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(this.TroopTransferableDelegate));
       partyScreenLogic.SetDoneHandler(new PartyPresentationDoneButtonDelegate(this.recruitDoneHandler));
       partyScreenLogic.Parties[0].Add(partyToBuyFrom.MobileParty); //this is really all I needed to do?
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
@@ -400,8 +404,24 @@ namespace TakeHideouts
       Game.Current.GameStateManager.PushState((GameState)state);
     }
 
-    //kill the party if no more troops (if buy troops screen doesn't...)
-    //probably doesn't, since it takes a PartyBase
+    //mostly copied/pasted from PartyScreenManager class from bannerlord dlls
+    private bool TroopTransferableDelegate(
+      CharacterObject character,
+      PartyScreenLogic.TroopType type,
+      PartyScreenLogic.PartyRosterSide side,
+      PartyBase leftOwnerParty)
+    {
+      CharacterObject leader = leftOwnerParty?.Leader;
+      bool flag = leader != null && leader.IsHero && leader.HeroObject.Clan == Clan.PlayerClan || leftOwnerParty != null && leftOwnerParty.IsMobile && (leftOwnerParty.MobileParty.IsCaravan && leftOwnerParty.Owner == Hero.MainHero) || leftOwnerParty != null && leftOwnerParty.IsMobile && leftOwnerParty.MobileParty.IsGarrison && leftOwnerParty.MobileParty.CurrentSettlement?.OwnerClan == Clan.PlayerClan;
+      if (!character.IsHero && side == PartyScreenLogic.PartyRosterSide.Left) //only addition is here
+        return true;
+      if (!character.IsHero || character.HeroObject.Clan == Clan.PlayerClan)
+        return false;
+      return !character.HeroObject.IsPlayerCompanion || character.HeroObject.IsPlayerCompanion & flag;
+    }
+
+
+    //kill the party if no more troops
     private bool recruitDoneHandler(
       TroopRoster leftMemberRoster,
       TroopRoster leftPrisonRoster,
