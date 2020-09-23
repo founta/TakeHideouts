@@ -5,3 +5,4 @@ Modules/*
 *.user
 *.dll
 *.zip
+packages/*

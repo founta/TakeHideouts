@@ -33,14 +33,8 @@ namespace TakeHideouts
     protected override void OnBeforeInitialModuleScreenSetAsRoot()
     {
       base.OnBeforeInitialModuleScreenSetAsRoot();
-
-      //read version from xml
-      XmlReader reader = XmlReader.Create("../../Modules/TakeHideouts/SubModule.xml"); //easier way to get at version?
-      reader.ReadToFollowing("Version");
-      reader.MoveToFirstAttribute();
-      string version = reader.Value;
       
-      InformationManager.DisplayMessage(new InformationMessage($"TakeHideouts {version}, tested for Bannerlord 1.5.1"));
+      InformationManager.DisplayMessage(new InformationMessage($"TakeHideouts {TakeHideoutsSettings.Instance.version}, tested for Bannerlord 1.5.1"));
 
       if (harmony == null)
       {
@@ -58,9 +52,7 @@ namespace TakeHideouts
       gameInitializer.AddBehavior(new RecruitFromHideoutBehavior());
       gameInitializer.AddBehavior(new HideoutItemMemberManagementBehavior());
       gameInitializer.AddBehavior(new HideoutOwnershipBehavior());
+
     }
   }
-
-  //TODO break this out into more logical, separate classes
-
 }

@@ -35,7 +35,7 @@ namespace TakeHideouts
       //safer. Will have to figure out how to fix users' hideout states though (set IsTaken false? dunno)
 
       //bool ours = Settlement.CurrentSettlement.Hideout.MapFaction == (IFaction) Hero.MainHero.Clan;
-      return !Settlement.CurrentSettlement.Hideout.IsTaken; //can only claim it if it is not already taken
+      return (!Settlement.CurrentSettlement.Hideout.IsTaken) && TakeHideoutsSettings.Instance.TakingHideoutsEnabled; //can only claim it if it is not already taken
     }
 
     private void hideout_claim_consequence(MenuCallbackArgs args)
@@ -53,8 +53,7 @@ namespace TakeHideouts
       int hideoutCost = 30 * totalWages + 1000; //min cost is 1000
 
       //truncate cost to the nearest thousand
-      // -= hideoutCost % 1000 would be better maybe but who cares
-      hideoutCost = (int)(hideoutCost / 1000);
+      hideoutCost = (int)(hideoutCost / 1000);// * TakeHideoutsSettings.Instance.HideoutCostMultiplier);
       hideoutCost *= 1000;
 
       bool canPurchase = Hero.MainHero.Gold >= hideoutCost;

@@ -24,7 +24,7 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
 
-      return true;
+      return true && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
     }
 
     //show list of parties from which to recruit
@@ -42,7 +42,7 @@ namespace TakeHideouts
           elements.Add(
             new InquiryElement(
               (object)party,
-              $"Bandit party {banditPartyCounter++}",
+              $"Bandit party {banditPartyCounter++} ({party.Party.MemberRoster.TotalManCount} troops)",
               new ImageIdentifier(CharacterCode.CreateFrom(party.Party.MemberRoster.ElementAt(0).Character)) //show sweet image of first troop
               )
             );
