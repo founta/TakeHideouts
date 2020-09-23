@@ -2,3 +2,6 @@
 TakeHideouts/bin/*
 TakeHideouts/obj/*
 Modules/*
+*.user
+*.dll
+*.zip

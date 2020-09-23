@@ -15,7 +15,7 @@
          <SubModule>
              <Name value="TakeHideouts"/>
              <DLLName value="TakeHideouts.dll"/>
-             <SubModuleClassType value="TakeHideouts.TakeHideoutsMain"/>
+             <SubModuleClassType value="TakeHideouts.TakeHideouts"/>
              <Tags>
                  <Tag key="DedicatedServerType" value="none" />
                  <Tag key="IsNoRenderModeElement" value="false" />
