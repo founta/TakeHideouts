@@ -7,7 +7,7 @@ bin_targets = ['TakeHideouts.dll',  #mod dll
                'MCMv3.dll',         #MCM
                'MCMv3.UI.v3.1.9.dll', 'MCMv3.Implementation.v3.1.9.dll', 
                'Bannerlord.UIExtenderEx.dll']
-base_targets = ['SubModule.xml', 'Harmony_LICENSE.txt']
+base_targets = ['SubModule.xml', 'Harmony_LICENSE.txt', 'MCM_LICENSE.txt']
 
 modules_dir_str = "Modules/"
 basedir_str = "TakeHideouts/"

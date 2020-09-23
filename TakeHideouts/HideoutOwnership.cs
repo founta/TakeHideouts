@@ -53,7 +53,7 @@ namespace TakeHideouts
       int hideoutCost = 30 * totalWages + 1000; //min cost is 1000
 
       //truncate cost to the nearest thousand
-      hideoutCost = (int)(hideoutCost / 1000);// * TakeHideoutsSettings.Instance.HideoutCostMultiplier);
+      hideoutCost = (int)(hideoutCost / 1000 * TakeHideoutsSettings.Instance.HideoutCostMultiplier);
       hideoutCost *= 1000;
 
       bool canPurchase = Hero.MainHero.Gold >= hideoutCost;
