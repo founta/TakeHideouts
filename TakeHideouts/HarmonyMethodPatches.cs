@@ -42,6 +42,20 @@ namespace TakeHideouts
     }
   }
 
+  //patch SelectARandomHideout to never select player-owned hideouts
+  [HarmonyPatch(typeof(BanditsCampaignBehavior), "SelectARandomHideout")]
+  public class SelectHideoutPatch
+  {
+    static void Postfix(BanditsCampaignBehavior __instance, ref Hideout __result)
+    {
+      IFaction hideoutMapFaction = __result.MapFaction;
+      if (__result.IsTaken) //(hideoutMapFaction == (IFaction) Hero.MainHero.Clan) 
+      {
+        __result = (Hideout)null;
+      }
+    }
+  }
+
   //patch troop transfer method to allow trading of party members
   //used to only allow trading prisoners
   //This is mostly copy-pasted from decompiled DLL, modified slightly

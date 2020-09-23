@@ -106,7 +106,6 @@ namespace TakeHideouts
 
         //re-open hideout menu
         //actually closes the game menu but I don't make the main party leave the settlement so it just re-opens
-        Campaign.Current.GameMenuManager.ExitToLast(); //leaves inquiry?
         Campaign.Current.GameMenuManager.ExitToLast(); //re-opens hideout menu
 
         //found this in one of the DLLs should update map color?

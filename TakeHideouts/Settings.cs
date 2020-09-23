@@ -34,9 +34,9 @@ namespace TakeHideouts
     [SettingPropertyGroup("Taking Hideouts")]
     public bool TakingHideoutsEnabled { get; set; } = true;
 
-    [SettingPropertyFloatingInteger("Hideout Cost Multiplier", 0.0f, 3.0f, RequireRestart = false, Order = 2, HintText = "Modifies the initial cost of taking a hideout")]//, Order = 2, RequireRestart = false)]
+    [SettingPropertyFloatingInteger("Hideout Cost Multiplier", 0.0f, 12.0f, RequireRestart = false, Order = 2, HintText = "Modifies the initial cost of taking a hideout")]//, Order = 2, RequireRestart = false)]
     [SettingPropertyGroup("Taking Hideouts")]
-    public float HideoutCostMultiplier { get; set; } = 1.0f;
+    public float HideoutCostMultiplier { get; set; } = 4.0f;
 
 
     [SettingPropertyBool("Recruit Bandit Troops", RequireRestart = false, HintText = "Allows recruiting bandit troops.")]//, IsToggle = false, Order = 1, RequireRestart = false)]
