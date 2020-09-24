@@ -22,17 +22,17 @@ namespace TakeHideouts
   {
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
-      campaignGameStarter.AddGameMenuOption("hideout_place", "claim", "Claim Hideout", hideout_claim_access_condition, hideout_claim_consequence, true);
-
+      campaignGameStarter.AddGameMenuOption("hideout_place", "claim", "Purchase Hideout", hideout_claim_access_condition, hideout_claim_consequence, true);
       campaignGameStarter.AddGameMenuOption("hideout_place", "abandon", "Abandon Hideout", hideout_abandon_access_condition, hideout_abandon_consequence, true);
     }
 
     private bool hideout_claim_access_condition(MenuCallbackArgs args)
     {
       args.optionLeaveType = GameMenuOption.LeaveType.RansomAndBribe;
-
-      //TODO use mapfaction instead of changing the IsTaken variable
-      //safer. Will have to figure out how to fix users' hideout states though (set IsTaken false? dunno)
+      
+      //TODO find a better way to figure out who owns the hideout rather than
+      //IsTaken. MapFaction won't work because IsTaken allows mapfaction to be set right in a harmony patch
+      //Maybe set hideout.Settlement.Party.Owner to the main hero? Seems to be null
 
       //bool ours = Settlement.CurrentSettlement.Hideout.MapFaction == (IFaction) Hero.MainHero.Clan;
       return (!Settlement.CurrentSettlement.Hideout.IsTaken) && TakeHideoutsSettings.Instance.TakingHideoutsEnabled; //can only claim it if it is not already taken
@@ -83,10 +83,7 @@ namespace TakeHideouts
           {
             //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
             //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
-
-            party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause (is this the right way to do this?)
-            //party.Party.Owner = Hero.MainHero; //this makes it so that you can see them in the clan menu
-            party.HomeSettlement = hideout.Settlement; //likely already set to this, doesn't seem to do anything
+            Common.SetAsOwnedHideoutParty(party, hideout);
 
             //Tell everyone except the bandit boss to patrol around the hideout
             if (!party.IsBanditBossParty)
@@ -94,12 +91,6 @@ namespace TakeHideouts
               //party.SetMoveDefendSettlement(party.HomeSettlement);
               party.SetMovePatrolAroundSettlement(party.HomeSettlement);
             }
-
-            //remove from player's war party list so that these bandits don't use up party slots
-            //is there an actual way to do this (that's not an internal method)?? Users report
-            //that bandit groups still use up slots sometimes but the issue is fixed on 
-            //abandoning/re-claiming hideout.
-            ExposeInternals.RemoveWarPartyInternal(party.ActualClan, party);
           }
 
         }

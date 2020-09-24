@@ -233,9 +233,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common.cs" />
     <Compile Include="ExposeInternals.cs" />
     <Compile Include="HarmonyMethodPatches.cs" />
     <Compile Include="HideoutOwnership.cs" />
+    <Compile Include="HideoutPatrols.cs" />
+    <Compile Include="PartyScreenAdditions.cs" />
     <Compile Include="RecruitFromHideout.cs" />
     <Compile Include="HideoutItemMemberManagement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
