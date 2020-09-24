@@ -21,6 +21,7 @@ namespace TakeHideouts
     //this shouldn't cause any problems to use
     //(war parties is only to calculate clan strength and take up
     // clan party limit, I think)
+    //after removing them from war parties, you can no longer 
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(Clan), "RemoveWarPartyInternal")]
     public static void RemoveWarPartyInternal(Clan instance, MobileParty warparty)

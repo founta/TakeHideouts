@@ -23,7 +23,7 @@ namespace TakeHideouts
 
   public class TakeHideouts : MBSubModuleBase
   {
-    private static Harmony harmony = null;
+    internal static Harmony harmony = null;
     protected override void OnSubModuleLoad()
     {
       base.OnSubModuleLoad();

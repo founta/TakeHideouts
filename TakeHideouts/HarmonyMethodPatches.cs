@@ -12,7 +12,9 @@ using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
-
+using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.Categories;
+using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement;
+using TaleWorlds.Core.ViewModelCollection;
 using HarmonyLib;
 
 namespace TakeHideouts
@@ -48,8 +50,7 @@ namespace TakeHideouts
   {
     static void Postfix(BanditsCampaignBehavior __instance, ref Hideout __result)
     {
-      IFaction hideoutMapFaction = __result.MapFaction;
-      if (__result.IsTaken) //(hideoutMapFaction == (IFaction) Hero.MainHero.Clan) 
+      if (__result.IsTaken) //then it's a player-owned hideout
       {
         __result = (Hideout)null;
       }
@@ -92,4 +93,30 @@ namespace TakeHideouts
       }
     }
   }
+
+  //patch clan parties VM so that we can't see bandit parties, if the user wants
+  [HarmonyPatch(typeof(ClanPartiesVM), "RefreshPartiesList")]
+  public class ClanPartiesVmPartyListPatch
+  {
+    static void Postfix(ClanPartiesVM __instance)
+    {
+      //if we've taken the hideout and we can attack it, disable attacking it
+      foreach (ClanPartyItemVM item in __instance.Parties)
+      {
+        Settlement home = item.Party.MobileParty.HomeSettlement;
+        if (home != null)
+        {
+          if (home.IsHideout() && home.Hideout.IsTaken) //then it's one of our bandit parties
+          {
+            __instance.Parties.Remove(item);
+          }
+        }
+      }
+    }
+    static bool Prepare()
+    {
+      return !TakeHideoutsSettings.Instance.ShowBanditsOnPartyScreen;
+    }
+  }
+  
 }
