@@ -89,13 +89,6 @@ namespace TakeHideouts
             //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
             //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
             Common.SetAsOwnedHideoutParty(party, hideout);
-
-            //Tell everyone except the bandit boss to patrol around the hideout
-            if (!party.IsBanditBossParty)
-            {
-              //party.SetMoveDefendSettlement(party.HomeSettlement);
-              party.SetMovePatrolAroundSettlement(party.HomeSettlement);
-            }
           }
 
         }

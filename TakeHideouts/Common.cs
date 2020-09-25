@@ -27,6 +27,8 @@ namespace TakeHideouts
       party.Party.Owner = Hero.MainHero; //this makes it so that you can see them in the clan menu, and also so that you can get access to them later..
       party.HomeSettlement = hideout.Settlement; //likely already set to this, doesn't seem to do anything
 
+      party.SetMoveGoToSettlement(party.HomeSettlement); //don't disperse when taking hideout
+
       //remove from player's war party list so that these bandits don't use up party slots
       //is there an actual way to do this (that's not an internal method)?? Users report
       //that bandit groups still use up slots sometimes but the issue is fixed on 

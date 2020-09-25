@@ -69,9 +69,13 @@ namespace TakeHideouts
 
       foreach (MobileParty party in Hero.MainHero.Clan.AllParties)
       {
-        if (party.HomeSettlement == hideout.Settlement)
+        if (party.HomeSettlement == hideout.Settlement && !party.IsBanditBossParty)
         {
+          //InformationManager.DisplayMessage(new InformationMessage($"bandit ai state {party.Ai.AiState} new decisions {party.Ai.DoNotMakeNewDecisions}"));
+
           party.SetMoveGoToSettlement(hideout.Settlement);
+          party.Ai.SetAIState(AIState.VisitingHideout);
+          party.Ai.SetDoNotMakeNewDecisions(true);
           //party.Ai.RethinkAtNextHourlyTick = true; //no
           //EnterSettlementAction.ApplyForParty()
         }
@@ -94,6 +98,9 @@ namespace TakeHideouts
         if (party != MobileParty.MainParty && !party.IsBanditBossParty)
         {
           party.SetMovePatrolAroundSettlement(hideout.Settlement);
+          party.Ai.SetAIState(AIState.PatrollingAroundLocation);
+          party.Ai.SetDoNotMakeNewDecisions(false);
+          //party.Ai.SetDoNotMakeNewDecisions(true);
         }
       }
     }
