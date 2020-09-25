@@ -8,6 +8,8 @@ using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
+using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
+
 
 using HarmonyLib;
 
@@ -32,6 +34,13 @@ namespace TakeHideouts
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(PartyScreenLogic), "SetPartyGoldChangeAmount")]
     public static void SetPartyGoldChangeAmount(PartyScreenLogic instance, int newTotalAmount)
+    {
+      return;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(BanditsCampaignBehavior), "InitBanditParty")]
+    public static void InitBanditParty(BanditsCampaignBehavior instance, MobileParty banditParty, TaleWorlds.Localization.TextObject name, Clan faction, Settlement homeSettlement)
     {
       return;
     }

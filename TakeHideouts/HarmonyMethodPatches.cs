@@ -50,9 +50,12 @@ namespace TakeHideouts
   {
     static void Postfix(BanditsCampaignBehavior __instance, ref Hideout __result)
     {
-      if (__result.IsTaken) //then it's a player-owned hideout
+      if (__result != null)
       {
-        __result = (Hideout)null;
+        if (__result.IsTaken) //then it's a player-owned hideout
+        {
+          __result = (Hideout)null;
+        }
       }
     }
   }

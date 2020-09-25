@@ -39,10 +39,15 @@ namespace TakeHideouts
 
       //make a bandit party in the hideout as an easy template
       BanditsCampaignBehavior banditBehavior = Campaign.Current.GetCampaignBehavior<BanditsCampaignBehavior>();
-      MobileParty banditParty = banditBehavior.AddBanditToHideout(hideout, Hero.MainHero.Culture.BanditBossPartyTemplate, false);
+      MobileParty banditParty = Common.CreateOwnedBanditPartyInHideout(hideout, 60); 
+
+        //banditBehavior.AddBanditToHideout(hideout, Hero.MainHero.Culture.BanditBossPartyTemplate);//Common.CreateBanditInHideout(hideout, Hero.MainHero.Culture.BanditBossPartyTemplate, 60);
+        //Common.CreateBanditInHideout(hideout, Hero.MainHero.Culture.BanditBossPartyTemplate, -1);
 
       //wipe out the bandit party
       banditParty.Party.MemberRoster.Clear();
+
+      //InformationManager.DisplayMessage(new InformationMessage($"Party limit {banditParty.Party.PartySizeLimit}"));
 
       //set main hero as owner of party
       Common.SetAsOwnedHideoutParty(banditParty, hideout);

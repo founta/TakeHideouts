@@ -36,16 +36,21 @@ namespace TakeHideouts
       Game.Current.GameStateManager.PushState((GameState)state);
     }
 
-    public static void OpenPartyScreenAsNewParty(PartyBase newParty)
+    public static void OpenPartyScreenAsNewParty(PartyBase newParty, int partyLimitOverride = -1)
     {
       //get access to private _currentMode and _partyScreenLogic from PartyScreenManager
       ref PartyScreenMode currentMode = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenMode>(PartyScreenManager.Instance, "_currentMode");
       ref PartyScreenLogic partyScreenLogic = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenLogic>(PartyScreenManager.Instance, "_partyScreenLogic");
 
+      int partyLimit = newParty.PartySizeLimit;
+      if (partyLimitOverride > 0)
+        partyLimit = partyLimitOverride;
+
       //harmony patch in PartyScreenLogic is what allows buying troops with TransferableWithTrade set as the transfer type
       currentMode = PartyScreenMode.TroopsManage;
       partyScreenLogic = new PartyScreenLogic();
-      partyScreenLogic.Initialize(newParty, MobileParty.MainParty, new TaleWorlds.Localization.TextObject("Create New Party"));
+      //partyScreenLogic.Initialize(newParty, MobileParty.MainParty, new TaleWorlds.Localization.TextObject("Create New Party"));
+      partyScreenLogic.Initialize(newParty, MobileParty.MainParty, false, newParty.Name, partyLimit, new TaleWorlds.Localization.TextObject("Create New Party"));
       partyScreenLogic.InitializeTrade(PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable, PartyScreenLogic.TransferState.NotTransferable);
       partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate));
       partyScreenLogic.SetDoneHandler(new PartyPresentationDoneButtonDelegate(PartyScreenAdditions.partyEmptyDoneHandler));

@@ -16,8 +16,8 @@ namespace TakeHideouts
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
       campaignGameStarter.AddGameMenuOption("hideout_place", "stash", "Access Stash", hideout_stash_access_condition, hideout_stash_consequence);
-      campaignGameStarter.AddGameMenuOption("hideout_place", "troops", "Manage Troops", hideout_management_access_condition, hideout_troops_consequence);
-      campaignGameStarter.AddGameMenuOption("hideout_place", "prison", "Manage Prisoners", hideout_management_access_condition, hideout_prison_consequence);
+      campaignGameStarter.AddGameMenuOption("hideout_place", "troops", "Manage Hideout Troops", hideout_management_access_condition, hideout_troops_consequence);
+      campaignGameStarter.AddGameMenuOption("hideout_place", "prison", "Manage Hideout Prisoners", hideout_management_access_condition, hideout_prison_consequence);
     }
 
     private bool hideout_stash_access_condition(MenuCallbackArgs args)

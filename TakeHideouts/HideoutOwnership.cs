@@ -42,19 +42,24 @@ namespace TakeHideouts
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
-      //compute cost of taking the hideout (one month's worth of the inhabitants' wages)
-      //TODO make this configurable. Modlib or something
-      int totalWages = 0;
+      //compute cost of taking the hideout (base cost + cost to hire all inhabitants)
+      int totalTroopCost = 0;
       foreach (MobileParty party in hideout.Settlement.Parties)
       {
         if (party.IsBandit || party.IsBanditBossParty)
-          totalWages += party.GetTotalWage();
+        {
+          foreach (TroopRosterElement member in party.MemberRoster)
+          {
+            totalTroopCost += member.Number * member.Character.PrisonerRansomValue(Hero.MainHero);
+          }
+        }
       }
-      int hideoutCost = 30 * totalWages + 1000; //min cost is 1000
+      int hideoutCost = (int) (5000 * TakeHideoutsSettings.Instance.HideoutCostMultiplier + totalTroopCost);
 
-      //truncate cost to the nearest thousand
-      hideoutCost = (int)(hideoutCost / 1000 * TakeHideoutsSettings.Instance.HideoutCostMultiplier);
+      //ceil(ish) to the nearest thousand
+      hideoutCost = (int)(hideoutCost / 1000.0);
       hideoutCost *= 1000;
+      hideoutCost += 1000;
 
       bool canPurchase = Hero.MainHero.Gold >= hideoutCost;
 

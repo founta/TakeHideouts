@@ -17,18 +17,27 @@ namespace TakeHideouts
   {
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
-      campaignGameStarter.AddGameMenuOption("hideout_place", "recruit", "Recruit Troops", hideout_recruit_access_condition, hideout_recruit_consequence);
+      campaignGameStarter.AddGameMenuOption("hideout_place", "recruit", "Recruit Bandit Troops", hideout_recruit_access_condition, hideout_get_troops_consequence);
+      campaignGameStarter.AddGameMenuOption("hideout_place", "manage", "Manage Bandit Parties", hideout_manage_access_condition, hideout_get_troops_consequence);
     }
 
     private bool hideout_recruit_access_condition(MenuCallbackArgs args)
     {
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
       args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
 
-      return true && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
+      return !hideout.IsTaken && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
+    }
+    private bool hideout_manage_access_condition(MenuCallbackArgs args)
+    {
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+      args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
+
+      return hideout.IsTaken && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
     }
 
     //show list of parties from which to recruit
-    private void hideout_recruit_consequence(MenuCallbackArgs args)
+    private void hideout_get_troops_consequence(MenuCallbackArgs args)
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
       List<InquiryElement> elements = new List<InquiryElement>();
@@ -49,9 +58,22 @@ namespace TakeHideouts
         }
       }
 
+      string inquiryHeader = "";
+      string affirmativeLabel = "";
+      if (hideout.IsTaken)
+      {
+        inquiryHeader = "Choose bandit party to manage";
+        affirmativeLabel = "Manage Troops";
+      }
+      else
+      {
+        inquiryHeader = "Choose bandit party to recruit from";
+        affirmativeLabel = "Select Troops";
+      }
+
       InformationManager.ShowMultiSelectionInquiry(
-        new MultiSelectionInquiryData("Choose bandit party to recruit from", "", elements, true, 1,
-                                      "Select Troops", "Leave", this.inquiry_recruit_troops, this.inquiry_do_nothing));
+        new MultiSelectionInquiryData(inquiryHeader, "", elements, true, 1,
+                                      affirmativeLabel, "Leave", this.inquiry_recruit_troops, this.inquiry_do_nothing));
 
       return;
     }
@@ -63,7 +85,12 @@ namespace TakeHideouts
         return;
       MobileParty party = (MobileParty)party_list[0].Identifier; //only one element
 
-      PartyScreenAdditions.OpenPartyScreenAsBuyTroops(party.Party);
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+
+      if (hideout.IsTaken)
+        PartyScreenAdditions.OpenPartyScreenAsManageParty(party.Party);
+      else
+        PartyScreenAdditions.OpenPartyScreenAsBuyTroops(party.Party);
     }
 
     private void inquiry_do_nothing(List<InquiryElement> elements)
