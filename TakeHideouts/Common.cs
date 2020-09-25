@@ -75,53 +75,5 @@ namespace TakeHideouts
       return banditParty;
     }
 
-    //mostly copy-and-pasted from DLLs
-    private static void InitBanditParty(MobileParty banditParty, TextObject name, Clan faction, Settlement home)
-    {
-      banditParty.Name = name;
-      banditParty.Party.Owner = faction.Leader;
-      banditParty.Party.Visuals.SetMapIconAsDirty();
-      banditParty.HomeSettlement = home;
-      banditParty.ActualClan = faction;
-
-      double totalStrength = (double)banditParty.Party.TotalStrength;
-      int initialGold = (int)(10.0 * (double)banditParty.Party.MemberRoster.TotalManCount * (0.5 + 1.0 * (double)MBRandom.RandomFloat));
-      banditParty.InitializePartyTrade(initialGold);
-
-      foreach (ItemObject itemObject in ItemObject.All)
-      {
-        if (itemObject.IsFood)
-        {
-          int num = 16;
-          int number = MBRandom.RoundRandomized((float)banditParty.MemberRoster.TotalManCount * (1f / (float)itemObject.Value) * (float)num * MBRandom.RandomFloat * MBRandom.RandomFloat * MBRandom.RandomFloat * MBRandom.RandomFloat);
-          if (number > 0)
-            banditParty.ItemRoster.AddToCounts(itemObject, number);
-        }
-      }
-    }
-
-    //mostly copy-and-pasted from DLLs
-    public static MobileParty CreateBanditInHideout(Hideout hideout, PartyTemplateObject pt, int partySizeLimitOverride)
-    {
-      BanditsCampaignBehavior behavior = Campaign.Current.GetCampaignBehavior<BanditsCampaignBehavior>();
-      MobileParty mobileParty = (MobileParty)null;
-      if (hideout.Owner.Settlement.Culture.IsBandit)
-      {
-        Clan faction = (Clan)null;
-        foreach (Clan banditFaction in Clan.BanditFactions)
-        {
-          if (hideout.Owner.Settlement.Culture == banditFaction.Culture)
-            faction = banditFaction;
-        }
-        mobileParty = MBObjectManager.Instance.CreateObject<MobileParty>(faction.StringId + "_1");
-        TextObject name = faction.Name;
-        mobileParty.InitializeMobileParty(name, pt, hideout.Owner.Settlement.Position2D, 0.0f, type: MobileParty.PartyTypeEnum.Bandit, troopNumberLimit: partySizeLimitOverride);
-        mobileParty.IsBanditBossParty = false;
-        Common.InitBanditParty(mobileParty, name, faction, hideout.Owner.Settlement);
-        mobileParty.SetMoveGoToSettlement(hideout.Owner.Settlement);
-        EnterSettlementAction.ApplyForParty(mobileParty, hideout.Owner.Settlement);
-      }
-      return mobileParty;
-    }
   }
 }
