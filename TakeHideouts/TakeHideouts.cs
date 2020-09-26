@@ -53,6 +53,7 @@ namespace TakeHideouts
       gameInitializer.AddBehavior(new HideoutItemMemberManagementBehavior());
       gameInitializer.AddBehavior(new HideoutPatrolsBehavior());
       gameInitializer.AddBehavior(new HideoutOwnershipBehavior());
+      gameInitializer.AddBehavior(new AiOwnedBanditBehavior());
     }
   }
 }

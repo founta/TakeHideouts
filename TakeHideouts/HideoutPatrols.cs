@@ -36,6 +36,7 @@ namespace TakeHideouts
       campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_patrol_recall", "Recall Patrol Parties", patrol_recall_condition, patrol_recall_consequence); //doesn't work
       campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_patrol_send", "Dispatch Patrol Parties", patrol_send_condition, patrol_send_consequence);
       campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_patrol_inventory", "Manage Patrol Party Inventory", patrol_manage_inventory_condition, patrol_manage_inventory_consequence);
+      campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_patrol_food_store", "Manage Patrol Party Food Store", patrol_manage_food_store_condition, patrol_manage_food_store_consequence);
     }
 
     [GameMenuInitializationHandler(submenu_id)]
@@ -61,6 +62,21 @@ namespace TakeHideouts
       args.optionLeaveType = GameMenuOption.LeaveType.Submenu;
 
       return Settlement.CurrentSettlement.Hideout.IsTaken;
+    }
+
+    private bool patrol_manage_food_store_condition(MenuCallbackArgs args)
+    {
+      args.optionLeaveType = GameMenuOption.LeaveType.Trade;
+
+      return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
+    }
+
+    private void patrol_manage_food_store_consequence(MenuCallbackArgs args)
+    {
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+
+      InventoryScreenAdditions.OpenScreenAsManageInventory(hideout.Settlement.Party.ItemRoster);
+      return;
     }
 
 
@@ -124,12 +140,12 @@ namespace TakeHideouts
       Common.SetAsOwnedHideoutParty(banditParty, hideout);
 
       //allow user to add their own troops
-      PartyScreenAdditions.OpenPartyScreenAsNewParty(banditParty.Party, doneDelegateOverride: partyEmptyDoneHandler);
+      PartyScreenAdditions.OpenPartyScreenAsNewParty(banditParty.Party, doneDelegateOverride: newPartyDoneHandler);
     }
 
     //kill the party if no more troops. Also give food based on number of troops
     //and charge player
-    public static bool partyEmptyDoneHandler(
+    public static bool newPartyDoneHandler(
       TroopRoster leftMemberRoster,
       TroopRoster leftPrisonRoster,
       TroopRoster rightMemberRoster,

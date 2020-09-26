@@ -233,6 +233,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AiOwnedBanditBehavior.cs" />
     <Compile Include="InventoryScreenAdditions.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="ExposeInternals.cs" />

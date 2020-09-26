@@ -51,6 +51,49 @@ namespace TakeHideouts
       party.ItemRoster.AddToCounts(DefaultItems.Grain, howMuch);
     }
 
+    public static int GetFoodCount(ItemRoster items)
+    {
+      int foodCount = 0;
+      for (int i = 0; i < items.Count; ++i)
+      {
+        ItemObject item = items.GetItemAtIndex(i);
+        if (item.IsFood)
+          foodCount += items[i].Amount;
+      }
+
+      return foodCount;
+    }
+
+    public static int GetCheapestFoodIdx(ItemRoster items)
+    {
+      int cheapestFoodIdx = -1;
+      int cheapestValue = -1;
+      if (items.Count > 0)
+      {
+        for (int i = 0; i < items.Count; ++i)
+        {
+          ItemObject item = items.GetItemAtIndex(i);
+          if (item.IsFood)
+          {
+            if (cheapestFoodIdx == -1)
+            {
+              cheapestFoodIdx = i;
+              cheapestValue = item.Value;
+            }
+            else
+            {
+              if (item.Value < cheapestValue)
+              {
+                cheapestValue = item.Value;
+                cheapestFoodIdx = i;
+              }
+            } //end if..else
+          } //end if IsFood 
+        } //end for
+      } //end item count if
+      return cheapestFoodIdx;
+    }
+
     public static MobileParty CreateOwnedBanditPartyInHideout(Hideout hideout, int initialGold = 300)
     {
       Clan banditClan = null;

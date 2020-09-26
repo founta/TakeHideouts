@@ -121,5 +121,64 @@ namespace TakeHideouts
       return !TakeHideoutsSettings.Instance.ShowBanditsOnPartyScreen;
     }
   }
-  
+
+  [HarmonyPatch(typeof(SettlementComponent), "OnPartyEntered")]
+  public class EnterSettlementPatch
+  {
+    static void Postfix(SettlementComponent __instance, MobileParty mobileParty)
+    {
+      if (mobileParty == null)
+        return;
+
+      Hideout hideout = null;
+      if (__instance.IsHideout())
+        hideout = __instance.Settlement.Hideout;
+      if (hideout == null)
+        return;
+ 
+      //only select parties whose home settlement is this hideout and if it is an owned hideout
+      if (mobileParty.HomeSettlement == null)
+        return;
+      if (mobileParty.HomeSettlement != hideout.Settlement)
+        return;
+      if (!hideout.IsTaken)
+        return;
+
+      //now take food from the hideout's food store. Prioritize lowest value food items
+      ItemRoster foodStore = hideout.Settlement.Party.ItemRoster;
+      ItemRoster partyInventory = mobileParty.Party.ItemRoster;
+
+      int desiredPartyFoodCount = mobileParty.Party.NumberOfRegularMembers;
+      int partyFoodCount = Common.GetFoodCount(partyInventory);
+
+      if (partyFoodCount >= desiredPartyFoodCount)
+        return;
+
+      int hideoutFoodCount = Common.GetFoodCount(foodStore);
+      if (hideoutFoodCount <= 0) //no food
+        return;
+      do
+      {
+        hideoutFoodCount = Common.GetFoodCount(foodStore);
+        partyFoodCount = Common.GetFoodCount(partyInventory);
+
+        int foodDifference = desiredPartyFoodCount - partyFoodCount;
+
+        int cheapestFoodIdx = Common.GetCheapestFoodIdx(foodStore);
+        if (cheapestFoodIdx < 0) //indicates couldn't find food. shouldn't happen, but...
+          return;
+
+        ItemObject cheapestFood = foodStore.GetItemAtIndex(cheapestFoodIdx);
+
+        //compute how much food to transfer, either how much they need or how much we have
+        int foodToTransfer = Math.Min(foodDifference, foodStore[cheapestFoodIdx].Amount);
+
+        //transfer food
+        foodStore.AddToCountsAtIndex(cheapestFoodIdx, -foodToTransfer);
+        partyInventory.AddToCounts(cheapestFood, foodToTransfer);
+
+      } while ((hideoutFoodCount > 0) && (partyFoodCount < desiredPartyFoodCount));
+    }
+  }
+
 }
