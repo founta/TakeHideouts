@@ -8,17 +8,55 @@ using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
+using TaleWorlds.CampaignSystem.Overlay;
+using TaleWorlds.Localization;
 
 namespace TakeHideouts
 {
   class HideoutItemMemberManagementBehavior : CampaignBehaviorBase
   {
+    public const string submenu_id = "takehideouts_stash";
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
-      campaignGameStarter.AddGameMenuOption("hideout_place", "stash", "Access Stash", hideout_stash_access_condition, hideout_stash_consequence);
-      campaignGameStarter.AddGameMenuOption("hideout_place", "troops", "Manage Hideout Troops", hideout_management_access_condition, hideout_troops_consequence);
-      campaignGameStarter.AddGameMenuOption("hideout_place", "prison", "Manage Hideout Prisoners", hideout_management_access_condition, hideout_prison_consequence);
+      //add submenu
+      string gameMenuTarget = "hideout_place"; //default to no submenu
+      if (TakeHideoutsSettings.Instance.StashSubmenuEnabled)
+      {
+        campaignGameStarter.AddGameMenu(submenu_id, "You meet with the bandit boss, who shows you to the hideout's stash", stash_submenu_on_init, GameOverlays.MenuOverlayType.None);
+        campaignGameStarter.AddGameMenuOption(submenu_id, "takehideouts_stash_leave", "{=3sRdGQou}Leave", stash_submenu_leave_condition, x => GameMenu.SwitchToMenu("hideout_place"));
+        campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_stash_submenu", "Manage Hideout Stash", stash_submenu_access_condition, x => GameMenu.SwitchToMenu(submenu_id));
+        gameMenuTarget = submenu_id;
+      }
+
+      //add submenu options
+      campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_stash", "Access Item Stash", hideout_stash_access_condition, hideout_stash_consequence);
+      campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_troops", "Manage Hideout Troops", hideout_management_access_condition, hideout_troops_consequence);
+      campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_prison", "Manage Hideout Prisoners", hideout_management_access_condition, hideout_prison_consequence);
     }
+
+    [GameMenuInitializationHandler(submenu_id)]
+    public static void stash_submenu_bkg_init(MenuCallbackArgs args)
+    {
+      args.MenuContext.SetBackgroundMeshName(Settlement.CurrentSettlement.GetComponent<SettlementComponent>().WaitMeshName);
+    }
+
+    private void stash_submenu_on_init(MenuCallbackArgs args)
+    {
+      args.MenuTitle = new TextObject($"Manage the stash of {Settlement.CurrentSettlement.Name}");
+    }
+    private bool stash_submenu_leave_condition(MenuCallbackArgs args)
+    {
+      args.optionLeaveType = GameMenuOption.LeaveType.Leave;
+
+      return true;
+    }
+    private bool stash_submenu_access_condition(MenuCallbackArgs args)
+    {
+      args.optionLeaveType = GameMenuOption.LeaveType.Submenu;
+
+      return Settlement.CurrentSettlement.Hideout.IsTaken;
+    }
+
 
     private bool hideout_stash_access_condition(MenuCallbackArgs args)
     {

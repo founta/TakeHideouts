@@ -67,7 +67,7 @@ namespace TakeHideouts
         hideout.Settlement.Position2D, 0.0f, 0.0f);
 
       banditParty.InitializePartyTrade(initialGold);
-      Common.GivePartyGrain(banditParty, 40);
+//      Common.GivePartyGrain(banditParty, 20);
 
       Common.SetAsOwnedHideoutParty(banditParty, hideout);
       banditParty.Party.Visuals.SetMapIconAsDirty();
@@ -77,5 +77,63 @@ namespace TakeHideouts
       return banditParty;
     }
 
+    public static void OpenSingleSelectInquiry(string headerText, List<InquiryElement> elements, string affirmativeLabel, Action<List<InquiryElement>> affirmativeAction)
+    {
+      InformationManager.ShowMultiSelectionInquiry(
+        new MultiSelectionInquiryData(headerText, "", elements, true, 1,
+        affirmativeLabel, "Leave",
+        affirmativeAction, Common.inquiry_do_nothing));
+    }
+
+    public static List<InquiryElement> GetHideoutPartyInquiryElements(Hideout hideout, bool showFood = false)
+    {
+      List<InquiryElement> elements = new List<InquiryElement>();
+
+      int banditPartyCounter = 1;
+      foreach (MobileParty party in hideout.Settlement.Parties)
+      {
+        if (!party.IsBanditBossParty && (party != MobileParty.MainParty))
+        {
+          //don't show parties with no troops, because those can exist apparently
+          if (party.Party.MemberRoster.Count <= 0)
+            continue;
+
+          string foodAdd = "";
+          if (showFood)
+            foodAdd = $", {party.TotalFoodAtInventory} food";
+
+          //TODO show random troop icon instead of first one?
+          elements.Add(
+            new InquiryElement(
+              (object)party,
+              $"Bandit party {banditPartyCounter++} ({party.Party.MemberRoster.TotalManCount} troops" + foodAdd + ")",
+              new ImageIdentifier(CharacterCode.CreateFrom(party.Party.MemberRoster.ElementAt(0).Character)) //show sweet image of first troop
+              )
+            );
+        }
+      }
+
+      return elements;
+    }
+
+    public static void RemoveEmptyParties(List<MobileParty> parties)
+    {
+      if (parties != null)
+      {
+        foreach (MobileParty party in parties)
+        {
+          if (party.MemberRoster.Count == 0)
+            party.RemoveParty();
+        }
+      }
+    }
+
+    public static void inquiry_do_nothing(List<InquiryElement> elements)
+    {
+      return;
+    }
+
   }
 }
+
+

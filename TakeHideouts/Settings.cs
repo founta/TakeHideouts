@@ -52,7 +52,21 @@ namespace TakeHideouts
     [SettingPropertyGroup("Bandit Patrols")]
     public bool ShowBanditsOnPartyScreen { get; set; } = true;
 
-    //TODO option to show/hide hideout patrols on party screen. Maybe somehow just set them all to militias or something
-    //or can I modify harmony patch prepare methods at runtime? probably not
+    [SettingPropertyBool("Give Created Patrol Parties Food", RequireRestart = false, HintText = "Whether or not to give created bandit patrols grain. " +
+      "The player is charged based on the amount of grain given.")]
+    [SettingPropertyGroup("Bandit Patrols")]
+    public bool GiveNewPatrolsGrain { get; set; } = true;
+
+
+    [SettingPropertyBool("Enable Bandit Patrols Submenu", RequireRestart = false, HintText = "Whether or not to group hideout patrol menu options inside a submenu. " +
+      "No effect unless activated from the main menu.")]
+    [SettingPropertyGroup("Hideout Menus")]
+    public bool PatrolSubmenuEnabled { get; set; } = true;
+
+    [SettingPropertyBool("Enable Hideout Stash Submenu", RequireRestart = false, HintText = "Whether or not to group hideout stash menu options (item, prisoner, troop stashes) inside a submenu. " +
+      "No effect unless activated from the main menu.")]
+    [SettingPropertyGroup("Hideout Menus")]
+    public bool StashSubmenuEnabled { get; set; } = true;
+
   }
 }

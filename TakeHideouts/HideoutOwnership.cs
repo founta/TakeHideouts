@@ -22,8 +22,8 @@ namespace TakeHideouts
   {
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
-      campaignGameStarter.AddGameMenuOption("hideout_place", "claim", "Purchase Hideout", hideout_claim_access_condition, hideout_claim_consequence, true);
-      campaignGameStarter.AddGameMenuOption("hideout_place", "abandon", "Abandon Hideout", hideout_abandon_access_condition, hideout_abandon_consequence, true);
+      campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_purchase", "Purchase Hideout", hideout_claim_access_condition, hideout_claim_consequence, true);
+      campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_abandon", "Abandon Hideout", hideout_abandon_access_condition, hideout_abandon_consequence, true);
     }
 
     private bool hideout_claim_access_condition(MenuCallbackArgs args)

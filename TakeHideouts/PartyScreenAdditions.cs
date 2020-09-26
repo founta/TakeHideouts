@@ -36,7 +36,7 @@ namespace TakeHideouts
       Game.Current.GameStateManager.PushState((GameState)state);
     }
 
-    public static void OpenPartyScreenAsNewParty(PartyBase newParty, int partyLimitOverride = -1)
+    public static void OpenPartyScreenAsNewParty(PartyBase newParty, int partyLimitOverride = -1, PartyPresentationDoneButtonDelegate doneDelegateOverride = null)
     {
       //get access to private _currentMode and _partyScreenLogic from PartyScreenManager
       ref PartyScreenMode currentMode = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenMode>(PartyScreenManager.Instance, "_currentMode");
@@ -46,6 +46,12 @@ namespace TakeHideouts
       if (partyLimitOverride > 0)
         partyLimit = partyLimitOverride;
 
+      PartyPresentationDoneButtonDelegate doneDelegate;
+      if (doneDelegateOverride == null)
+        doneDelegate = PartyScreenAdditions.partyEmptyDoneHandler;
+      else
+        doneDelegate = doneDelegateOverride;
+
       //harmony patch in PartyScreenLogic is what allows buying troops with TransferableWithTrade set as the transfer type
       currentMode = PartyScreenMode.TroopsManage;
       partyScreenLogic = new PartyScreenLogic();
@@ -53,7 +59,7 @@ namespace TakeHideouts
       partyScreenLogic.Initialize(newParty, MobileParty.MainParty, false, newParty.Name, partyLimit, new TaleWorlds.Localization.TextObject("Create New Party"));
       partyScreenLogic.InitializeTrade(PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable, PartyScreenLogic.TransferState.NotTransferable);
       partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate));
-      partyScreenLogic.SetDoneHandler(new PartyPresentationDoneButtonDelegate(PartyScreenAdditions.partyEmptyDoneHandler));
+      partyScreenLogic.SetDoneHandler(new PartyPresentationDoneButtonDelegate(doneDelegate));
       partyScreenLogic.Parties[0].Add(newParty.MobileParty);
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
       state.InitializeLogic(partyScreenLogic);
@@ -106,19 +112,7 @@ namespace TakeHideouts
       List<MobileParty> leftParties = null,
       List<MobileParty> rigthParties = null)
     {
-      //assuming only one left party
-      if (leftParties != null)
-      {
-        if (leftParties.Count != 0)
-        {
-          if (leftParties[0].MemberRoster.Count == 0)
-            leftParties[0].RemoveParty();
-        }
-        else
-        {
-          InformationManager.DisplayMessage(new InformationMessage($"left party count zero. whyyy"));
-        }
-      }
+      Common.RemoveEmptyParties(leftParties);
       return true;
     }
   }

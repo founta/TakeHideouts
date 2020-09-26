@@ -8,6 +8,7 @@ using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
+using TaleWorlds.CampaignSystem.Overlay;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
@@ -19,12 +20,82 @@ namespace TakeHideouts
 {
   class HideoutPatrolsBehavior : CampaignBehaviorBase
   {
+    public const string submenu_id = "takehideouts_patrols";
+
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
-      campaignGameStarter.AddGameMenuOption("hideout_place", "patrol_create", "Create Patrol Party", patrol_create_condition, patrol_create_consequence);
-      campaignGameStarter.AddGameMenuOption("hideout_place", "patrol_recall", "Recall Patrol Parties", patrol_recall_condition, patrol_recall_consequence); //doesn't work
-      campaignGameStarter.AddGameMenuOption("hideout_place", "patrol_send", "Dispatch Patrol Parties", patrol_send_condition, patrol_send_consequence);
+      string gameMenuTarget = "hideout_place";
+      if (TakeHideoutsSettings.Instance.PatrolSubmenuEnabled)
+      {
+        campaignGameStarter.AddGameMenu(submenu_id, "You plan out bandit patrols with the help of the bandit leader", stash_submenu_on_init, GameOverlays.MenuOverlayType.None);
+        campaignGameStarter.AddGameMenuOption(submenu_id, "takehideouts_patrol_leave", "{=3sRdGQou}Leave", patrol_submenu_leave_condition, x => GameMenu.SwitchToMenu("hideout_place"));
+        campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_patrol_submenu", "Manage Patrol Parties", patrol_submenu_access_condition, x => GameMenu.SwitchToMenu(submenu_id));
+        gameMenuTarget = submenu_id;
+      }
+      campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_patrol_create", "Create Patrol Party", patrol_create_condition, patrol_create_consequence);
+      campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_patrol_recall", "Recall Patrol Parties", patrol_recall_condition, patrol_recall_consequence); //doesn't work
+      campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_patrol_send", "Dispatch Patrol Parties", patrol_send_condition, patrol_send_consequence);
+      campaignGameStarter.AddGameMenuOption(gameMenuTarget, "takehideouts_patrol_inventory", "Manage Patrol Party Inventory", patrol_manage_inventory_condition, patrol_manage_inventory_consequence);
     }
+
+    [GameMenuInitializationHandler(submenu_id)]
+    public static void stash_submenu_bkg_init(MenuCallbackArgs args)
+    {
+      args.MenuContext.SetBackgroundMeshName(Settlement.CurrentSettlement.GetComponent<SettlementComponent>().WaitMeshName);
+    }
+
+    private void stash_submenu_on_init(MenuCallbackArgs args)
+    {
+      args.MenuTitle = new TaleWorlds.Localization.TextObject($"Manage the patrols of {Settlement.CurrentSettlement.Name}");
+    }
+
+    private bool patrol_submenu_leave_condition(MenuCallbackArgs args)
+    {
+      args.optionLeaveType = GameMenuOption.LeaveType.Leave;
+
+      return true;
+    }
+
+    private bool patrol_submenu_access_condition(MenuCallbackArgs args)
+    {
+      args.optionLeaveType = GameMenuOption.LeaveType.Submenu;
+
+      return Settlement.CurrentSettlement.Hideout.IsTaken;
+    }
+
+
+    private bool patrol_manage_inventory_condition(MenuCallbackArgs args)
+    {
+      args.optionLeaveType = GameMenuOption.LeaveType.Trade;
+
+      return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
+    }
+
+    //show list of parties from which to recruit
+    private void patrol_manage_inventory_consequence(MenuCallbackArgs args)
+    {
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+      List<InquiryElement> elements = Common.GetHideoutPartyInquiryElements(hideout, true);
+
+      string inquiryHeader = "Manage the inventory of the chosen party. Ensure they have food.";
+      string affirmativeLabel = "Manage Party Inventory";
+
+      Common.OpenSingleSelectInquiry(inquiryHeader, elements, affirmativeLabel, this.inquiry_manage_inventory);
+
+      return;
+    }
+
+    private void inquiry_manage_inventory(List<InquiryElement> party_list)
+    {
+      if (party_list.Count == 0)
+        return;
+      MobileParty party = (MobileParty)party_list[0].Identifier; //only one element
+
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+
+      InventoryScreenAdditions.OpenScreenAsManageInventory(party.Party.ItemRoster);
+    }
+
 
     private bool patrol_create_condition(MenuCallbackArgs args)
     {
@@ -53,7 +124,36 @@ namespace TakeHideouts
       Common.SetAsOwnedHideoutParty(banditParty, hideout);
 
       //allow user to add their own troops
-      PartyScreenAdditions.OpenPartyScreenAsNewParty(banditParty.Party);
+      PartyScreenAdditions.OpenPartyScreenAsNewParty(banditParty.Party, doneDelegateOverride: partyEmptyDoneHandler);
+    }
+
+    //kill the party if no more troops. Also give food based on number of troops
+    //and charge player
+    public static bool partyEmptyDoneHandler(
+      TroopRoster leftMemberRoster,
+      TroopRoster leftPrisonRoster,
+      TroopRoster rightMemberRoster,
+      TroopRoster rightPrisonRoster,
+      bool isForced,
+      List<MobileParty> leftParties = null,
+      List<MobileParty> rigthParties = null)
+    {
+      Common.RemoveEmptyParties(leftParties);
+
+      if (TakeHideoutsSettings.Instance.GiveNewPatrolsGrain)
+      {
+        foreach (MobileParty party in leftParties)
+        {
+          //give new party grains so it doesn't starve
+          int numGrains = party.Party.NumberOfRegularMembers;
+          Common.GivePartyGrain(party, numGrains);
+
+          //charge player for grains given
+          Hero.MainHero.ChangeHeroGold(-DefaultItems.Grain.Value * numGrains);
+        }
+      }
+
+      return true;
     }
 
     private bool patrol_recall_condition(MenuCallbackArgs args)

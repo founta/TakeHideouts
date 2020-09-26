@@ -44,6 +44,13 @@ namespace TakeHideouts
     {
       return;
     }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(InventoryManager), "GetCurrentMarketData")]
+    public static IMarketData GetCurrentMarketData(InventoryManager __instance)
+    {
+      return null;
+    }
     /*
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(PartyAi), "SetDefaultBehavior")]

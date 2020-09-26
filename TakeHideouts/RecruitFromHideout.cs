@@ -17,8 +17,13 @@ namespace TakeHideouts
   {
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
-      campaignGameStarter.AddGameMenuOption("hideout_place", "recruit", "Recruit Bandit Troops", hideout_recruit_access_condition, hideout_get_troops_consequence);
-      campaignGameStarter.AddGameMenuOption("hideout_place", "manage", "Manage Bandit Parties", hideout_manage_access_condition, hideout_get_troops_consequence);
+      campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_recruit", "Recruit Bandit Troops", hideout_recruit_access_condition, hideout_get_troops_consequence);
+
+      string manageGameMenuTarget = "hideout_place";
+      if (TakeHideoutsSettings.Instance.PatrolSubmenuEnabled)
+        manageGameMenuTarget = HideoutPatrolsBehavior.submenu_id;
+      
+      campaignGameStarter.AddGameMenuOption(manageGameMenuTarget, "takehideouts_manage", "Manage Patrol Party Troops", hideout_manage_access_condition, hideout_get_troops_consequence);
     }
 
     private bool hideout_recruit_access_condition(MenuCallbackArgs args)
@@ -40,23 +45,7 @@ namespace TakeHideouts
     private void hideout_get_troops_consequence(MenuCallbackArgs args)
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
-      List<InquiryElement> elements = new List<InquiryElement>();
-
-      int banditPartyCounter = 1;
-      foreach (MobileParty party in hideout.Settlement.Parties)
-      {
-        if (!party.IsBanditBossParty && (party != MobileParty.MainParty))
-        {
-          //TODO show random troop instead of first one?
-          elements.Add(
-            new InquiryElement(
-              (object)party,
-              $"Bandit party {banditPartyCounter++} ({party.Party.MemberRoster.TotalManCount} troops)",
-              new ImageIdentifier(CharacterCode.CreateFrom(party.Party.MemberRoster.ElementAt(0).Character)) //show sweet image of first troop
-              )
-            );
-        }
-      }
+      List<InquiryElement> elements = Common.GetHideoutPartyInquiryElements(hideout);
 
       string inquiryHeader = "";
       string affirmativeLabel = "";
@@ -71,15 +60,13 @@ namespace TakeHideouts
         affirmativeLabel = "Select Troops";
       }
 
-      InformationManager.ShowMultiSelectionInquiry(
-        new MultiSelectionInquiryData(inquiryHeader, "", elements, true, 1,
-                                      affirmativeLabel, "Leave", this.inquiry_recruit_troops, this.inquiry_do_nothing));
+      Common.OpenSingleSelectInquiry(inquiryHeader, elements, affirmativeLabel, RecruitFromHideoutBehavior.inquiry_recruit_troops);
 
       return;
     }
 
 
-    private void inquiry_recruit_troops(List<InquiryElement> party_list)
+    public static void inquiry_recruit_troops(List<InquiryElement> party_list)
     {
       if (party_list.Count == 0)
         return;
@@ -91,11 +78,6 @@ namespace TakeHideouts
         PartyScreenAdditions.OpenPartyScreenAsManageParty(party.Party);
       else
         PartyScreenAdditions.OpenPartyScreenAsBuyTroops(party.Party);
-    }
-
-    private void inquiry_do_nothing(List<InquiryElement> elements)
-    {
-      return;
     }
 
     //dunno what these do
