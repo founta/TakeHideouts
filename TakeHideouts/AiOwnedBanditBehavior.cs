@@ -12,7 +12,6 @@ using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
 
 using HarmonyLib;
 
@@ -37,26 +36,26 @@ namespace TakeHideouts
       AIBehaviorTuple patrolKey = new AIBehaviorTuple((IMapPoint)mobileParty.HomeSettlement, AiBehavior.PatrolAroundPoint);
       AIBehaviorTuple returnToHideoutKey = new AIBehaviorTuple((IMapPoint)mobileParty.HomeSettlement, AiBehavior.GoToSettlement);
 
+      //have some base desire to either patrol or return to hideout
       float returnToHideoutScore = 10;
       float patrolScore = 10;
 
-      if (mobileParty.DefaultBehavior == AiBehavior.GoToSettlement) //when we recall bandit parties
+      //if we're currently patrolling or staying at home, tend to keep doing that
+      if (mobileParty.DefaultBehavior == AiBehavior.GoToSettlement) //when we recall bandit parties or when they come back to get food
         returnToHideoutScore += 50;
       if (mobileParty.DefaultBehavior == AiBehavior.PatrolAroundPoint) //when we have the patrols dispatched
-      {
         patrolScore += 50;
 
-        //want to return to hideout if low on food, keep patrolling if fine on food
-        //TODO add some random element?
 
-        //check food
-        int foodDays = mobileParty.GetNumDaysForFoodToLast();
+      //want to return to hideout if low on food, keep or return to patrolling if fine on food
+      //TODO add some random element?
+      int foodDays = mobileParty.GetNumDaysForFoodToLast();
 
-        float foodImportance = (float)Math.Exp(-0.25 * foodDays);
+      float foodImportance = (float)Math.Exp(-0.25 * foodDays);
 
-        returnToHideoutScore *= foodImportance;
-        patrolScore *= (1 - foodImportance);
-      }
+      returnToHideoutScore *= foodImportance;
+      patrolScore *= (1 - foodImportance);
+
 
       //replace keys
       if (p.AIBehaviorScores.ContainsKey(patrolKey))
