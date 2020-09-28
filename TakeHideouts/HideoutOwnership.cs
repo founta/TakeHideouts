@@ -84,7 +84,7 @@ namespace TakeHideouts
 
         foreach (MobileParty party in hideout.Settlement.Parties)
         {
-          if (party.IsBandit) //don't change the main party
+          if (party.IsBandit || party.IsBanditBossParty) //don't change the main party
           {
             //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
             //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));

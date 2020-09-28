@@ -103,17 +103,26 @@ namespace TakeHideouts
   {
     static void Postfix(ClanPartiesVM __instance)
     {
-      //if we've taken the hideout and we can attack it, disable attacking it
-      foreach (ClanPartyItemVM item in __instance.Parties)
+      List<int> removalIndices = new List<int>();
+      for (int i = 0; i < __instance.Parties.Count; ++i)//ClanPartyItemVM item in __instance.Parties.)
       {
+        ClanPartyItemVM item = __instance.Parties[i];
         Settlement home = item.Party.MobileParty.HomeSettlement;
         if (home != null)
         {
           if (home.IsHideout() && home.Hideout.IsTaken) //then it's one of our bandit parties
           {
-            __instance.Parties.Remove(item);
+            removalIndices.Add(i);
           }
         }
+      }
+
+      //remove parties from parties list.
+      //in reverse order to prevent issues with index updates as we remove parties
+      removalIndices.Reverse();
+      foreach (int idx in removalIndices)
+      {
+        __instance.Parties.RemoveAt(idx);
       }
     }
     static bool Prepare()
