@@ -15,6 +15,7 @@ using SandBox.View.Map;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.Categories;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement;
 using TaleWorlds.Core.ViewModelCollection;
+using SandBox.ViewModelCollection.MobilePartyTracker;
 using HarmonyLib;
 
 namespace TakeHideouts
@@ -65,7 +66,6 @@ namespace TakeHideouts
   }
 
   //patch bandit AI so that they cannot visit player hideouts
-  //hopefully this isn't too inefficient
   [HarmonyPatch(typeof(AiVisitSettlementBehavior), "AiHourlyTick")]
   public class AiVisitSettlementPatch
   {
@@ -181,6 +181,30 @@ namespace TakeHideouts
     static bool Prepare()
     {
       return !TakeHideoutsSettings.Instance.ShowBanditsOnPartyScreen;
+    }
+  }
+
+  //patch mobile tracker VM so that we can't see bandit parties on the map, if the user wants
+  [HarmonyPatch(typeof(MobilePartyTrackerVM), "InitList")]
+  public class PartyTrackerPatch
+  {
+    static void Postfix(MobilePartyTrackerVM __instance)
+    {
+      foreach (MobileParty party in Clan.PlayerClan.AllParties)
+      {
+        Settlement home = party.HomeSettlement;
+        if (home.IsHideout())
+        {
+          if (home.Hideout.IsTaken)
+          {
+            ExposeInternals.RemoveIfExists(__instance, party);
+          }
+        }
+      }
+    }
+    static bool Prepare()
+    {
+      return !TakeHideoutsSettings.Instance.ShowBanditPatrolMobilePartyTracker;
     }
   }
 

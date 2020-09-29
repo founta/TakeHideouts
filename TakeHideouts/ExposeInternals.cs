@@ -10,6 +10,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.Towns;
+using SandBox.ViewModelCollection.MobilePartyTracker;
 
 using HarmonyLib;
 
@@ -59,7 +60,12 @@ namespace TakeHideouts
       return;
     }
 
-    
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(MobilePartyTrackerVM), "RemoveIfExists", new Type[] { typeof(MobileParty) })]
+    public static void RemoveIfExists(MobilePartyTrackerVM instance, MobileParty party)
+    {
+      return;
+    }
 
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(InventoryManager), "GetCurrentMarketData")]

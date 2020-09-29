@@ -50,8 +50,13 @@ namespace TakeHideouts
     [SettingPropertyBool("Show Bandits on Party Screen", RequireRestart = true, HintText = "Whether or not to show bandit parties on the clan party page. " +
       "Disabling this will make it hard to disband them, if desired.")]
     [SettingPropertyGroup("Bandit Patrols")]
-    public bool ShowBanditsOnPartyScreen { get; set; } = true;
+    public bool ShowBanditsOnPartyScreen { get; set; } = false;
 
+    [SettingPropertyBool("Show Bandit Patrol Party Tracker", RequireRestart = true, HintText = "Whether or not to show bandit parties on the map " +
+      "when out of view distance, like with armies or caravans.")]
+    [SettingPropertyGroup("Bandit Patrols")]
+    public bool ShowBanditPatrolMobilePartyTracker { get; set; } = false;
+    
     [SettingPropertyBool("Give Created Patrol Parties Food", RequireRestart = false, HintText = "Whether or not to give created bandit patrols grain. " +
       "The player is charged based on the amount of grain given.")]
     [SettingPropertyGroup("Bandit Patrols")]
