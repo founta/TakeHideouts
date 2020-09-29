@@ -38,7 +38,7 @@ namespace TakeHideouts
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
       args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
 
-      return hideout.IsTaken && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
+      return hideout.IsTaken;// && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
     }
 
     //show list of parties from which to recruit

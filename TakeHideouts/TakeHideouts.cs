@@ -34,7 +34,7 @@ namespace TakeHideouts
     {
       base.OnBeforeInitialModuleScreenSetAsRoot();
       
-      InformationManager.DisplayMessage(new InformationMessage($"TakeHideouts {TakeHideoutsSettings.Instance.version}, tested for Bannerlord 1.5.1"));
+      InformationManager.DisplayMessage(new InformationMessage($"TakeHideouts {TakeHideoutsSettings.Instance.version}, tested for Bannerlord 1.5.2"));
 
       if (harmony == null)
       {
@@ -54,6 +54,7 @@ namespace TakeHideouts
       gameInitializer.AddBehavior(new HideoutPatrolsBehavior());
       gameInitializer.AddBehavior(new HideoutOwnershipBehavior());
       gameInitializer.AddBehavior(new AiOwnedBanditBehavior());
+      gameInitializer.AddBehavior(new WaitInHideoutBehavior());
     }
   }
 }

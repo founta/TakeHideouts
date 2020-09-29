@@ -9,7 +9,7 @@ using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-
+using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.Towns;
 
 using HarmonyLib;
 
@@ -44,6 +44,22 @@ namespace TakeHideouts
     {
       return;
     }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(PlayerTownVisitCampaignBehavior), "SwitchToMenuIfThereIsAnInterrupt")]
+    public static void SwitchToMenuIfThereIsAnInterrupt(PlayerTownVisitCampaignBehavior instance, string currentMenuId)
+    {
+      return;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(PlayerTownVisitCampaignBehavior), "game_menu_settlement_wait_on_init")]
+    public static void game_menu_settlement_wait_on_init(PlayerTownVisitCampaignBehavior instance, MenuCallbackArgs args)
+    {
+      return;
+    }
+
+    
 
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(InventoryManager), "GetCurrentMarketData")]

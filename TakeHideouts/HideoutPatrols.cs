@@ -93,7 +93,7 @@ namespace TakeHideouts
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
       List<InquiryElement> elements = Common.GetHideoutPartyInquiryElements(hideout, true);
 
-      string inquiryHeader = "Manage the inventory of the chosen party. Ensure they have food.";
+      string inquiryHeader = "Manage the inventory of the chosen party";
       string affirmativeLabel = "Manage Party Inventory";
 
       Common.OpenSingleSelectInquiry(inquiryHeader, elements, affirmativeLabel, this.inquiry_manage_inventory);
@@ -124,12 +124,9 @@ namespace TakeHideouts
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
-      //make a bandit party in the hideout as an easy template
+      //make a bandit party in the hideout
       BanditsCampaignBehavior banditBehavior = Campaign.Current.GetCampaignBehavior<BanditsCampaignBehavior>();
       MobileParty banditParty = Common.CreateOwnedBanditPartyInHideout(hideout, 60); 
-
-        //banditBehavior.AddBanditToHideout(hideout, Hero.MainHero.Culture.BanditBossPartyTemplate);//Common.CreateBanditInHideout(hideout, Hero.MainHero.Culture.BanditBossPartyTemplate, 60);
-        //Common.CreateBanditInHideout(hideout, Hero.MainHero.Culture.BanditBossPartyTemplate, -1);
 
       //wipe out the bandit party
       banditParty.Party.MemberRoster.Clear();
@@ -172,14 +169,14 @@ namespace TakeHideouts
       return true;
     }
 
-    private bool patrol_recall_condition(MenuCallbackArgs args)
+    public static bool patrol_recall_condition(MenuCallbackArgs args)
     {
       args.optionLeaveType = GameMenuOption.LeaveType.DefendAction;
 
       return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
     }
 
-    private void patrol_recall_consequence(MenuCallbackArgs args)
+    public static void patrol_recall_consequence(MenuCallbackArgs args)
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
@@ -191,21 +188,21 @@ namespace TakeHideouts
 
           party.SetMoveGoToSettlement(hideout.Settlement);
           party.Ai.SetAIState(AIState.VisitingHideout);
-          party.Ai.SetDoNotMakeNewDecisions(true);
+          party.Ai.SetDoNotMakeNewDecisions(true); //TODO this makes it so they can't run away from stronger parties..
           //party.Ai.RethinkAtNextHourlyTick = true; //no
           //EnterSettlementAction.ApplyForParty()
         }
       }
     }
 
-    private bool patrol_send_condition(MenuCallbackArgs args)
+    public static bool patrol_send_condition(MenuCallbackArgs args)
     {
       args.optionLeaveType = GameMenuOption.LeaveType.HostileAction;
 
       return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
     }
 
-    private void patrol_send_consequence(MenuCallbackArgs args)
+    public static void patrol_send_consequence(MenuCallbackArgs args)
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 

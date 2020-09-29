@@ -55,7 +55,7 @@ namespace TakeHideouts
     [SettingPropertyBool("Give Created Patrol Parties Food", RequireRestart = false, HintText = "Whether or not to give created bandit patrols grain. " +
       "The player is charged based on the amount of grain given.")]
     [SettingPropertyGroup("Bandit Patrols")]
-    public bool GiveNewPatrolsGrain { get; set; } = true;
+    public bool GiveNewPatrolsGrain { get; set; } = false;
 
 
     [SettingPropertyBool("Enable Bandit Patrols Submenu", RequireRestart = false, HintText = "Whether or not to group hideout patrol menu options inside a submenu. " +
