@@ -44,6 +44,59 @@ namespace TakeHideouts
     }
   }
 
+  //patch Hideout IsInfested getter to always be false if hideout is taken
+  //sometimes it is true for player owned hideouts?? don't know how that's possible though,
+  //as IsBandit for player-owned parties is always false...
+  //actually wandering bandit parties may have a chance to enter player-owned hideouts
+  //If they do that, they can infest the hideout or change the MapFaction
+  //will have to look at their AI
+  //yep that can happen
+  [HarmonyPatch(typeof(Hideout), "IsInfested")]
+  [HarmonyPatch(MethodType.Getter)]
+  public class HideoutIsInfestedPatch
+  {
+    static void Postfix(Hideout __instance, ref bool __result)
+    {
+      if (__instance.IsTaken) //if we've taken the hideout, ignore the ifBandit check
+      {
+        __result = false;
+      }
+    }
+  }
+
+  //patch bandit AI so that they cannot visit player hideouts
+  //hopefully this isn't too inefficient
+  [HarmonyPatch(typeof(AiVisitSettlementBehavior), "AiHourlyTick")]
+  public class AiVisitSettlementPatch
+  {
+    static void Postfix(Hideout __instance, MobileParty mobileParty, PartyThinkParams p)
+    {
+      if (mobileParty.IsBandit) //then remove any desire to visit player-owned settlements
+      {
+        //check early exit conditions
+        if (p.AIBehaviorScores.Count == 0)
+          return;
+        List<AIBehaviorTuple> visitSettlementKeys = new List<AIBehaviorTuple>();
+        foreach (AIBehaviorTuple key in p.AIBehaviorScores.Keys)
+          if (key.AiBehavior == AiBehavior.GoToSettlement)
+            visitSettlementKeys.Add(key);
+        if (visitSettlementKeys.Count == 0)
+          return;
+
+        //remove player hideouts from bandit behavior scores
+        List<AIBehaviorTuple> removalKeys = new List<AIBehaviorTuple>();
+        List<Hideout> playerHideouts = Common.GetPlayerOwnedHideouts();
+        foreach (AIBehaviorTuple key in visitSettlementKeys)
+          foreach (Hideout hideout in playerHideouts)
+            if (key.Party == (IMapPoint)hideout.Settlement)
+              removalKeys.Add(key);
+
+        foreach (AIBehaviorTuple key in removalKeys)
+          p.AIBehaviorScores.Remove(key);
+      }
+    }
+  }
+
   //patch SelectARandomHideout to never select player-owned hideouts
   [HarmonyPatch(typeof(BanditsCampaignBehavior), "SelectARandomHideout")]
   public class SelectHideoutPatch

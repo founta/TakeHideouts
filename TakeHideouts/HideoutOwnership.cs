@@ -81,6 +81,7 @@ namespace TakeHideouts
         //for the hideouts. hopefully changing it doesn't break anything
         //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
         hideout.IsTaken = true;
+        Common.playerHideoutListDirty = true;
 
         foreach (MobileParty party in hideout.Settlement.Parties)
         {
@@ -122,6 +123,7 @@ namespace TakeHideouts
     {
       ref Hideout hideout = ref Settlement.CurrentSettlement.Hideout;
       hideout.IsTaken = false;
+      Common.playerHideoutListDirty = true;
 
       //get correct original bandit clan
       Clan originalBanditClan = Clan.BanditFactions.FirstOrDefault<Clan>();

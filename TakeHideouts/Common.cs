@@ -38,16 +38,6 @@ namespace TakeHideouts
 
     public static void GivePartyGrain(MobileParty party, int howMuch)
     {
-      /*
-      foreach (ItemObject obj in ItemObject.All)
-      {
-        if (obj.IsFood)
-        {
-          InformationManager.DisplayMessage(new InformationMessage($"{obj.Name} {obj.Name.GetID()} {obj.Id}"));
-          //MBObjectManager.Instance.GetObject<ItemObject>("Grain");
-        }
-      }
-      */
       party.ItemRoster.AddToCounts(DefaultItems.Grain, howMuch);
     }
 
@@ -92,6 +82,25 @@ namespace TakeHideouts
         } //end for
       } //end item count if
       return cheapestFoodIdx;
+    }
+
+    private static List<Hideout> playerHideouts = null;
+    public static bool playerHideoutListDirty = true;
+    public static List<Hideout> GetPlayerOwnedHideouts()
+    {
+      //cache list of player hideouts so we don't have to 
+      //loop through all settlements each time
+      if (playerHideoutListDirty)
+      {
+        playerHideouts = new List<Hideout>();
+        foreach (Settlement s in Settlement.All)
+          if (s.IsHideout())
+            if (s.Hideout.IsTaken)
+              playerHideouts.Add(s.Hideout);
+        playerHideoutListDirty = false;
+      }
+
+      return playerHideouts;
     }
 
     public static MobileParty CreateOwnedBanditPartyInHideout(Hideout hideout, int initialGold = 300)
