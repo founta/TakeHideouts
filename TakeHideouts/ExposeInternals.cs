@@ -11,6 +11,9 @@ using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.Towns;
 using SandBox.ViewModelCollection.MobilePartyTracker;
+using TaleWorlds.SaveSystem;
+
+using TaleWorlds.Library;
 
 using HarmonyLib;
 
@@ -63,6 +66,51 @@ namespace TakeHideouts
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(MobilePartyTrackerVM), "RemoveIfExists", new Type[] { typeof(MobileParty) })]
     public static void RemoveIfExists(MobilePartyTrackerVM instance, MobileParty party)
+    {
+      return;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(Campaign), "InitializeTypes")]
+    public static void InitializeTypes(Campaign instance)
+    {
+      return;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(PartyBase), "OnFinishLoadState")]
+    public static void OnFinishLoadState(PartyBase instance)
+    {
+      return;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(Settlement), "OnLoad")]
+    public static void OnLoad(Settlement instance, MetaData metaData)
+    {
+      return;
+    }
+
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(Settlement), "Position2D")]
+    [HarmonyPatch(MethodType.Setter)]
+    public static void SetSettlementPosition(Settlement instance, Vec2 value)
+    {
+      return;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(SettlementComponent), "BackgroundMeshName")]
+    [HarmonyPatch(MethodType.Setter)]
+    public static void SetHideoutBackgroundMeshName(SettlementComponent instance, string value)
+    {
+      return;
+    }
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(SettlementComponent), "WaitMeshName")]
+    [HarmonyPatch(MethodType.Setter)]
+    public static void SetHideoutWaitMeshName(SettlementComponent instance, string value)
     {
       return;
     }

@@ -9,6 +9,7 @@ using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.Actions;
+using TaleWorlds.CampaignSystem.SandBox;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
@@ -16,6 +17,9 @@ using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.Categories;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement;
 using TaleWorlds.Core.ViewModelCollection;
 using SandBox.ViewModelCollection.MobilePartyTracker;
+
+using TaleWorlds.ObjectSystem;
+
 using HarmonyLib;
 
 namespace TakeHideouts
@@ -150,7 +154,9 @@ namespace TakeHideouts
     }
   }
 
-  //patch clan parties VM so that we can't see bandit parties, if the user wants
+  //TODO common function for removing parties from clan parties VM that takes some comparison function
+
+  //patch clan parties VM so that we can't see bandit boss parties
   [HarmonyPatch(typeof(ClanPartiesVM), "RefreshPartiesList")]
   public class ClanPartiesVmPartyListPatch
   {
@@ -160,14 +166,10 @@ namespace TakeHideouts
       for (int i = 0; i < __instance.Parties.Count; ++i)//ClanPartyItemVM item in __instance.Parties.)
       {
         ClanPartyItemVM item = __instance.Parties[i];
-        Settlement home = item.Party.MobileParty.HomeSettlement;
-        if (home != null)
-        {
-          if (home.IsHideout() && home.Hideout.IsTaken) //then it's one of our bandit parties
-          {
-            removalIndices.Add(i);
-          }
-        }
+        MobileParty party = item.Party.MobileParty;
+        
+        if (Common.IsOwnedBanditParty(party))//then it's one of our bandit parties
+          removalIndices.Add(i);
       }
 
       //remove parties from parties list.
@@ -184,6 +186,44 @@ namespace TakeHideouts
     }
   }
 
+  //patch clan parties VM so that we can't see bandit boss parties
+  [HarmonyPatch(typeof(ClanPartiesVM), "RefreshPartiesList")]
+  public class DontShowBanditBossPatch
+  {
+    static void Postfix(ClanPartiesVM __instance)
+    {
+      List<int> removalIndices = new List<int>();
+      for (int i = 0; i < __instance.Parties.Count; ++i)
+      {
+        ClanPartyItemVM item = __instance.Parties[i];
+        MobileParty party = item.Party.MobileParty;
+
+        if (Common.IsOwnedBanditParty(party))
+          if (party.IsBanditBossParty)
+            removalIndices.Add(i);
+      }
+
+      //remove parties from parties list.
+      //in reverse order to prevent issues with index updates as we remove parties
+      removalIndices.Reverse();
+      foreach (int idx in removalIndices)
+      {
+        __instance.Parties.RemoveAt(idx);
+      }
+    }
+  }
+
+  //Patch mobile party after load so that it prevents bandit parties from taking up party limit
+  [HarmonyPatch(typeof(MobileParty), "AfterLoad")]
+  public class ClanPartyLimitPatch
+  {
+    static void Postfix(MobileParty __instance)
+    {
+      if (Common.IsOwnedBanditParty(__instance))
+        ExposeInternals.RemoveWarPartyInternal(__instance.ActualClan, __instance);
+    }
+  }
+
   //patch mobile tracker VM so that we can't see bandit parties on the map, if the user wants
   [HarmonyPatch(typeof(MobilePartyTrackerVM), "InitList")]
   public class PartyTrackerPatch
@@ -192,19 +232,62 @@ namespace TakeHideouts
     {
       foreach (MobileParty party in Clan.PlayerClan.AllParties)
       {
-        Settlement home = party.HomeSettlement;
-        if (home.IsHideout())
-        {
-          if (home.Hideout.IsTaken)
-          {
-            ExposeInternals.RemoveIfExists(__instance, party);
-          }
-        }
+        if (Common.IsOwnedBanditParty(party))
+          ExposeInternals.RemoveIfExists(__instance, party);
       }
     }
     static bool Prepare()
     {
       return !TakeHideoutsSettings.Instance.ShowBanditPatrolMobilePartyTracker;
+    }
+  }
+
+  //patch mobile tracker VM so that we can't see bandit boss parties on the map
+  [HarmonyPatch(typeof(MobilePartyTrackerVM), "InitList")]
+  public class PartyTrackerBanditBossPatch
+  {
+    static void Postfix(MobilePartyTrackerVM __instance)
+    {
+      foreach (MobileParty party in Clan.PlayerClan.AllParties)
+      {
+        if (Common.IsOwnedBanditParty(party) && party.IsBanditBossParty)
+            ExposeInternals.RemoveIfExists(__instance, party);
+      }
+    }
+  }
+
+  //patch mobile tracker VM so that bandit banners are set correctly
+  [HarmonyPatch(typeof(MobilePartyTrackItemVM), "UpdateProperties")]
+  public class BanditBannerPatch
+  {
+    static void Postfix(MobilePartyTrackItemVM __instance)
+    {
+      MobileParty _concernedMobileParty = __instance.TrackedArmy?.LeaderParty ?? __instance.TrackedParty; //this line taken from dlls
+      ref ImageIdentifierVM _factionVisualBind = ref AccessTools.FieldRefAccess<MobilePartyTrackItemVM, ImageIdentifierVM>(__instance, "_factionVisualBind");
+
+      if (Common.IsOwnedBanditParty(_concernedMobileParty))
+      {
+        _factionVisualBind = new ImageIdentifierVM(BannerCode.CreateFrom(Clan.PlayerClan.Banner), true);
+      }
+    }
+  }
+
+  [HarmonyPatch(typeof(SandBoxManager), "OnCampaignStart")]
+  public class SandboxManagerPatch
+  {
+    static void Postfix(SandBoxManager __instance)
+    {
+      if (HideoutsAnywhere.save_companion != null)
+      {
+        MBObjectManager.Instance.LoadXml(HideoutsAnywhere.save_companion, null);
+        InformationManager.DisplayMessage(new InformationMessage($"loaded custom xml"));
+      }
+
+      InformationManager.DisplayMessage(new InformationMessage($"loaded xmls, save companion {HideoutsAnywhere.save_companion}"));
+    }
+    static bool Prepare()
+    {
+      return false;
     }
   }
 

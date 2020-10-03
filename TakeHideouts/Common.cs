@@ -36,6 +36,24 @@ namespace TakeHideouts
       ExposeInternals.RemoveWarPartyInternal(Hero.MainHero.Clan, party);
     }
 
+    public static bool IsOwnedBanditParty(MobileParty party)
+    {
+      if (party == null)
+        return false;
+
+      Settlement home = party.HomeSettlement;
+      if (home == null || party.ActualClan == null)
+        return false;
+
+      //we only know if it's our bandit party based on its home settlement
+      //could also look in main party clan's party list, but this is easier
+      if (home.IsHideout())
+        if (home.Hideout.IsTaken)
+          return true;
+
+      return false;
+    }
+
     public static void GivePartyGrain(MobileParty party, int howMuch)
     {
       party.ItemRoster.AddToCounts(DefaultItems.Grain, howMuch);

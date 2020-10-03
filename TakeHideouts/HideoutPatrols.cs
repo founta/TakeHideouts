@@ -12,7 +12,13 @@ using TaleWorlds.CampaignSystem.Overlay;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
+
+using SandBox.ViewModelCollection;
+using TaleWorlds.Engine;
+using TaleWorlds.Library;
+using TaleWorlds.Core.ViewModelCollection;
 using SandBox.View.Map;
+using TaleWorlds.GauntletUI;
 
 using HarmonyLib;
 
@@ -152,7 +158,6 @@ namespace TakeHideouts
       List<MobileParty> rigthParties = null)
     {
       Common.RemoveEmptyParties(leftParties);
-
       if (TakeHideoutsSettings.Instance.GiveNewPatrolsGrain)
       {
         foreach (MobileParty party in leftParties)

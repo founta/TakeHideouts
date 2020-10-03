@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using System.Xml;
 
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
@@ -13,8 +13,47 @@ using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
+using TaleWorlds.ObjectSystem;
+using TaleWorlds.Localization;
 
 using HarmonyLib;
+
+/* Things needed to make hideouts anywhere
+ * 
+ * CREATION:::
+  <write new xml node>
+  hideout = MBObjectManager.Instance.CreateObjectFromXmlNode(<XML save companion node>)
+  ExposeInternals.InitializeTypes(Campaign.Current); //should add it to the settlement list
+
+  //initialize hideout
+  //order?
+  hideout.Settlement.OnGameCreated()
+  hideout.Settlement.OnGameInitialized()
+  hideout.Settlement.OnSessionStart()
+
+  hideout.OnInit()
+  hideout.Settlement.IsVisible = true;
+  ExposeInternals.OnLoad(hideout, new TaleWorlds.SaveSystem.MetaData());
+
+  //make visible on map??
+  Campaign.Current.MapSceneWrapper.AddNewEntityToMapScene(settlement.StringId, settlement.Position2D);
+
+  ON GAME SAVE:::
+  create XML save companion file containing all player-owned hideouts
+
+  ON GAME LOAD:::
+  load XML save companion file, too
+
+  DESTRUCTION:::
+  hideout.IsVisible = false //hide because it might stick around on the map after destruction
+  hideout.OnSessionStart() //set map visual dirty
+  // destroy all parties in hideout //
+  MBObjectManager.Instance.UnregisterObject(hideout); //should make it so it isn't saved anymore
+  ExposeInternals.InitializeTypes(Campaign.Current); //remove from settlements.all
+  (remove from XML save companion)
+
+ * 
+ */
 
 namespace TakeHideouts
 {
@@ -24,6 +63,7 @@ namespace TakeHideouts
     {
       campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_purchase", "Purchase Hideout", hideout_claim_access_condition, hideout_claim_consequence, true);
       campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_abandon", "Abandon Hideout", hideout_abandon_access_condition, hideout_abandon_consequence, true);
+      //campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_test_create", "Create Hideout", hideout_abandon_access_condition, (x=> HideoutsAnywhere.CreateHideout()));
     }
 
     private bool hideout_claim_access_condition(MenuCallbackArgs args)
@@ -62,11 +102,14 @@ namespace TakeHideouts
       hideoutCost += 1000;
 
       bool canPurchase = Hero.MainHero.Gold >= hideoutCost;
-
+      
       string inquiryText = $"You ask the bandit leader how much it would cost to employ his camp's services. He considers the benefit of allying " +
-        $"with {Hero.MainHero.Clan.Name.ToString()} and names his price -- {hideoutCost} Denars"; //TODO use the cool denar image thing
+        $"with {Hero.MainHero.Clan.Name.ToString()} and names his price -- {hideoutCost}" + "{GOLD_ICON}"; //TODO use the cool denar image thing
       if (!canPurchase)
         inquiryText += "\n\nYou cannot afford this hideout";
+
+      TextObject inquiryTextObject = new TextObject(inquiryText);
+      inquiryTextObject.SetTextVariable("GOLD_ICON", "{=!}<img src=\"Icons\\Coin@2x\">");
 
       string inquiryTitle = "Purchase Hideout";
 
@@ -75,6 +118,9 @@ namespace TakeHideouts
 
       Action inquiryAffirmative = () =>
       {
+        //xml_test.Save("test.xml");
+
+
         Hero.MainHero.ChangeHeroGold(-hideoutCost); //TODO message like "you paid $(cost)"
 
         //This appears to default false for hideouts and doesn't appear to change anything
@@ -104,11 +150,11 @@ namespace TakeHideouts
 
         //update hideout's appearance on map. Also gives a notification that you're the new owner
         ChangeOwnerOfSettlementAction.ApplyByBarter(Hero.MainHero, hideout.Settlement);
+
       };
 
       //shows the option to buy the hideout
-      InformationManager.ShowInquiry(new InquiryData(inquiryTitle, inquiryText, canPurchase, true, "Purchase", "Leave", inquiryAffirmative, null));
-
+      InformationManager.ShowInquiry(new InquiryData(inquiryTitle, inquiryTextObject.ToString(), canPurchase, true, "Purchase", "Leave", inquiryAffirmative, null));
       return;
     }
 
@@ -121,38 +167,51 @@ namespace TakeHideouts
 
     private void hideout_abandon_consequence(MenuCallbackArgs args)
     {
-      ref Hideout hideout = ref Settlement.CurrentSettlement.Hideout;
-      hideout.IsTaken = false;
-      Common.playerHideoutListDirty = true;
 
-      //get correct original bandit clan
-      Clan originalBanditClan = Clan.BanditFactions.FirstOrDefault<Clan>();
-      foreach (Clan banditClan in Clan.BanditFactions)
+      string inquiryText = $"You prepare to part ways with your hideout.\n"
+        + "Are you sure you want to abandon the hideout? Ownership will revert back to the original bandit owners.";
+      string inquiryTitle = "Abandon Hideout";
+
+
+      Action inquiryAffirmative = () =>
       {
-        if (banditClan.Culture == hideout.Settlement.Culture)
+        ref Hideout hideout = ref Settlement.CurrentSettlement.Hideout;
+        hideout.IsTaken = false;
+        Common.playerHideoutListDirty = true;
+
+        //get correct original bandit clan
+        Clan originalBanditClan = Clan.BanditFactions.FirstOrDefault<Clan>();
+        foreach (Clan banditClan in Clan.BanditFactions)
         {
-          originalBanditClan = banditClan;
-          break;
+          if (banditClan.Culture == hideout.Settlement.Culture)
+          {
+            originalBanditClan = banditClan;
+            break;
+          }
         }
-      }
 
-      //set each party clan back to the correct original bandit clan 
-      foreach (MobileParty party in hideout.Settlement.Parties)
-      {
-        //don't set the main party's clan. Holy crap how did this not cause problems
-        if (party != MobileParty.MainParty)
+        //set each party clan back to the correct original bandit clan 
+        foreach (MobileParty party in hideout.Settlement.Parties)
         {
-          party.ActualClan = originalBanditClan;
+          //don't set the main party's clan. Holy crap how did this not cause problems
+          if (party != MobileParty.MainParty)
+          {
+            party.ActualClan = originalBanditClan;
+          }
         }
-      }
 
-      //remove ownership of hideout
-      //by setting it to the hero of that bandit clan
-      //hopefully doesn't blow anything up (doesn't appear to)
-      ChangeOwnerOfSettlementAction.ApplyByDefault(originalBanditClan.Leader, hideout.Settlement);
+        //re-opens hideout menu
+        Campaign.Current.GameMenuManager.ExitToLast();
 
-      //re-opens hideout menu
-      Campaign.Current.GameMenuManager.ExitToLast();
+        //remove ownership of hideout
+        //by setting it to the hero of that bandit clan
+        //hopefully doesn't blow anything up (doesn't appear to)
+        ChangeOwnerOfSettlementAction.ApplyByDefault(originalBanditClan.Leader, hideout.Settlement);
+      };
+
+      //shows the confirmation option to abandon hideout
+      InformationManager.ShowInquiry(new InquiryData(inquiryTitle, inquiryText, true, true, "Abandon Hideout", "Cancel", inquiryAffirmative, null));
+
       return;
     }
 
