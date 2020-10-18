@@ -79,18 +79,37 @@ namespace TakeHideouts
 
     static public void CreateHideout()
     {
-      if (save_companion == null)
-        InitSaveCompanion();
+      //if (save_companion == null)
+       // InitSaveCompanion();
 
       //Call settlement ctor (make new settlement)
       //add component hideout
       //set hideout id wait mesh, background mesh, scene name, map icon?
       //set settlement culture, location, name, id
       //THEN make xml node
-      XmlNode new_settlement = AddHideoutToSaveCompanion();
+      /*XmlNode new_settlement = AddHideoutToSaveCompanion();
       if (new_settlement == null)
         return;
       InformationManager.DisplayMessage(new InformationMessage($"new created"));
+      */
+      Settlement settlement = Settlement.CurrentSettlement;
+
+      InformationManager.DisplayMessage(new InformationMessage($"{settlement}"));
+
+      if (settlement != null)
+      {
+        InformationManager.DisplayMessage(new InformationMessage($"{settlement.LocationComplex}"));
+
+        if (settlement.LocationComplex != null)
+        {
+          foreach (Location location in settlement.LocationComplex.GetListOfLocations())
+            InformationManager.DisplayMessage(new InformationMessage($"{location.StringId}"));
+        }
+      }
+
+
+
+      //MBObjectManager.Instance.CreateObject<Settlement>()
       /*
       string id = "takehideouts_test_hideout_sos";
 
@@ -98,6 +117,8 @@ namespace TakeHideouts
       settlement.StringId = id;
       settlement.Culture = Clan.BanditFactions.FirstOrDefault<Clan>().Culture;
       ExposeInternals.SetSettlementPosition(settlement, new Vec2(MobileParty.MainParty.Position2D.X, MobileParty.MainParty.Position2D.Y + 2));
+
+      
 
       Hideout hideout = settlement.AddComponent<Hideout>();
       ExposeInternals.SetHideoutBackgroundMeshName(hideout, "empire_twn_scene_bg");

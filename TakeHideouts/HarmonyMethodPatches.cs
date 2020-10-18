@@ -12,6 +12,8 @@ using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.SandBox;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
+using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.BarterBehaviors;
+using TaleWorlds.CampaignSystem.Barterables;
 using SandBox.View.Map;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.Categories;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement;
@@ -132,7 +134,7 @@ namespace TakeHideouts
         else
           ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount - command.Character.PrisonerRansomValue(Hero.MainHero) * command.TotalNumber);
       }
-    }
+    }    
   }
 
   //patch 'Wait until nightfall' on_condition to disable attacking the hideout
@@ -271,7 +273,7 @@ namespace TakeHideouts
       }
     }
   }
-
+  /*
   [HarmonyPatch(typeof(SandBoxManager), "OnCampaignStart")]
   public class SandboxManagerPatch
   {
@@ -290,7 +292,40 @@ namespace TakeHideouts
       return false;
     }
   }
+  */
+  //remove all hideouts from possible barterable fiefs, as they crash the game
+  [HarmonyPatch(typeof(FiefBarterBehavior), "CheckForBarters")]
+  public class FiefBarterPatch
+  {
+    static void Postfix(FiefBarterBehavior __instance, ref BarterData args)
+    {
+      ref List<Barterable> _barterables = ref AccessTools.FieldRefAccess<BarterData, List<Barterable>>(args, "_barterables");
 
+      List<int> removalIndices = new List<int>();
+      for (int i = 0; i < _barterables.Count; ++i)
+      {
+        Barterable item = _barterables[i];
+        if (item.Group is FiefBarterGroup)
+        {
+          FiefBarterable fief = (FiefBarterable)item;
+
+          Settlement settlement = AccessTools.FieldRefAccess<FiefBarterable, Settlement>(fief, "_settlement");
+          if (settlement.IsHideout())
+            removalIndices.Add(i);
+        }
+      }
+
+      //remove hideout fiefs from barterables list.
+      //in reverse order to prevent issues with index updates as we remove them
+      removalIndices.Reverse();
+      foreach (int idx in removalIndices)
+      {
+        _barterables.RemoveAt(idx);
+      }
+    }
+  }
+
+  //have owned bandit parties get food from the food store
   [HarmonyPatch(typeof(SettlementComponent), "OnPartyEntered")]
   public class EnterSettlementPatch
   {
