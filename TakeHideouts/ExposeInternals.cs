@@ -121,6 +121,20 @@ namespace TakeHideouts
     {
       return null;
     }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(HideoutCampaignBehavior), "game_menu_attack_hideout_parties_on_condition")]
+    public static bool AttackHideoutCondition(HideoutCampaignBehavior __instance, MenuCallbackArgs args)
+    {
+      return false; //overridden, right?
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(HideoutCampaignBehavior), "game_menu_encounter_attack_on_consequence")]
+    public static void AttackHideoutConsequence(HideoutCampaignBehavior __instance, MenuCallbackArgs args)
+    {
+      return;
+    }
     /*
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(PartyAi), "SetDefaultBehavior")]

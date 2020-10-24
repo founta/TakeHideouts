@@ -64,7 +64,26 @@ namespace TakeHideouts
       campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_purchase", "Purchase Hideout", hideout_claim_access_condition, hideout_claim_consequence, true);
       campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_abandon", "Abandon Hideout", hideout_abandon_access_condition, hideout_abandon_consequence, true);
       //campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_test_create", "Create Hideout", hideout_abandon_access_condition, (x=> HideoutsAnywhere.CreateHideout()));
+
+      //take hideout by force
+      campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_take_hideout", "Take hideout by force", new GameMenuOption.OnConditionDelegate(this.take_hideout_condition), new GameMenuOption.OnConsequenceDelegate(this.take_hideout_consequence));
+      campaignGameStarter.AddGameMenuOption("hideout_after_wait", "takehideouts_take_hideout", "Take hideout by force", new GameMenuOption.OnConditionDelegate(this.take_hideout_condition), new GameMenuOption.OnConsequenceDelegate(this.take_hideout_consequence));
     }
+
+    private bool take_hideout_condition(MenuCallbackArgs args)
+    {
+      HideoutCampaignBehavior bhv = Campaign.Current.GetCampaignBehavior<HideoutCampaignBehavior>();
+      return ExposeInternals.AttackHideoutCondition(bhv, args);
+    }
+
+    private void take_hideout_consequence(MenuCallbackArgs args)
+    {
+      HideoutCampaignBehavior bhv = Campaign.Current.GetCampaignBehavior<HideoutCampaignBehavior>();
+
+      Settlement.CurrentSettlement.Hideout.IsTaken = true;
+      ExposeInternals.AttackHideoutConsequence(bhv, args);
+    }
+
 
     private bool hideout_claim_access_condition(MenuCallbackArgs args)
     {
@@ -122,23 +141,7 @@ namespace TakeHideouts
 
 
         Hero.MainHero.ChangeHeroGold(-hideoutCost); //TODO message like "you paid $(cost)"
-
-        //This appears to default false for hideouts and doesn't appear to change anything
-        //for the hideouts. hopefully changing it doesn't break anything
-        //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
-        hideout.IsTaken = true;
-        Common.playerHideoutListDirty = true;
-
-        foreach (MobileParty party in hideout.Settlement.Parties)
-        {
-          if (party.IsBandit || party.IsBanditBossParty) //don't change the main party
-          {
-            //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
-            //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
-            Common.SetAsOwnedHideoutParty(party, hideout);
-          }
-
-        }
+        Common.SetAsOwnedHideout(hideout, true);
 
         //re-open hideout menu
         //actually closes the game menu but I don't make the main party leave the settlement so it just re-opens
@@ -147,9 +150,6 @@ namespace TakeHideouts
         //found this in one of the DLLs should update map color?
         //doesnt really do anything
         //hideout.Settlement.Party.Visuals.SetMapIconAsDirty();
-
-        //update hideout's appearance on map. Also gives a notification that you're the new owner
-        ChangeOwnerOfSettlementAction.ApplyByBarter(Hero.MainHero, hideout.Settlement);
 
       };
 

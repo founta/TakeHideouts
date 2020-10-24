@@ -36,6 +36,37 @@ namespace TakeHideouts
       ExposeInternals.RemoveWarPartyInternal(Hero.MainHero.Clan, party);
     }
 
+    public static void SetAsOwnedHideout(Hideout hideout, bool barter=true)
+    {         
+      //This appears to default false for hideouts and doesn't appear to change anything
+      //for the hideouts. hopefully changing it doesn't break anything
+      //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
+      hideout.IsTaken = true;
+
+      //re-initialize the owned hideout list when next requested
+      Common.playerHideoutListDirty = true;
+
+      foreach (MobileParty party in hideout.Settlement.Parties)
+      {
+        if (party.IsBandit || party.IsBanditBossParty) //don't change the main party
+        {
+          //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
+          //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
+          Common.SetAsOwnedHideoutParty(party, hideout);
+        }
+      }
+
+      if (barter)
+      {
+        //update hideout's appearance on map. Also gives a notification that you're the new owner
+        ChangeOwnerOfSettlementAction.ApplyByBarter(Hero.MainHero, hideout.Settlement);
+      }
+      else
+      {
+        ChangeOwnerOfSettlementAction.ApplyByDefault(Hero.MainHero, hideout.Settlement);
+      }
+    }
+
     public static bool IsOwnedBanditParty(MobileParty party)
     {
       if (party == null)

@@ -20,6 +20,8 @@ using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement;
 using TaleWorlds.Core.ViewModelCollection;
 using SandBox.ViewModelCollection.MobilePartyTracker;
 
+using SandBox.Source.Missions;
+
 using TaleWorlds.ObjectSystem;
 
 using HarmonyLib;
@@ -155,6 +157,88 @@ namespace TakeHideouts
       }
     }
   }
+
+
+  //patch hideout mission controller to allow transferring hideout control
+  //(and make a new bandit boss party as the old one is gone) if the player wins the hideout battle
+  [HarmonyPatch(typeof(HideoutMissionController), "OnEndMission")]
+  public class MissionControllerPatch
+  {
+    static void Postfix(HideoutMissionController __instance)
+    {
+      if (!Settlement.CurrentSettlement.IsHideout())
+        return;
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+
+      //if the player has won against a hideout they plan to take, set as an owned hideout and add new bandit boss
+      if ((MapEvent.PlayerMapEvent.BattleState == BattleState.AttackerVictory) && hideout.IsTaken)
+      {
+        Common.SetAsOwnedHideout(hideout, false);
+
+        MobileParty boss = Common.CreateOwnedBanditPartyInHideout(hideout);
+        boss.IsBanditBossParty = true;
+      }
+      else //the player has lost, clear the indicator that they wanted to take the hideout
+      {
+        hideout.IsTaken = false;
+      }
+    }
+  }
+
+  /*
+//add a new party to prevent hideout from being cleared
+[HarmonyPatch(typeof(HideoutMissionController), "OnEndMission")]
+public class MissionControllerPatch
+{
+  static void Postfix(HideoutMissionController __instance)
+  {
+    if (!Settlement.CurrentSettlement.IsHideout())
+      return;
+    Hideout hideout = Settlement.CurrentSettlement.Hideout;
+
+    //if the player has won against a hideout they plan to take, add new bandit boss
+    if ((MapEvent.PlayerMapEvent.BattleState == BattleState.AttackerVictory) && hideout.IsTaken)
+    {
+      MobileParty boss = Common.CreateOwnedBanditPartyInHideout(hideout);
+      boss.IsBanditBossParty = true;
+    }
+    else //the player has lost, clear the indicator that they wanted to take the hideout
+    {
+      hideout.IsTaken = false;
+    }
+  }
+}
+*/
+
+
+  /*
+  [HarmonyPatch(typeof(MapEvent), "FinishBattle")]
+  public class MapEventPatch
+  {
+    //static void Postfix(HideoutMissionController __instance)
+    static void Postfix(MapEvent __instance)
+    {
+      if (!__instance.IsHideoutBattle)
+        return;
+
+      Settlement settlement = __instance.MapEventSettlement;
+
+      if (!settlement.IsHideout())
+        return;
+      Hideout hideout = settlement.Hideout;
+
+      //if the player has won against a hideout they plan to take, set as an owned hideout and add new bandit boss
+      if ((__instance.BattleState == BattleState.AttackerVictory) && hideout.IsTaken)
+      {
+        Common.SetAsOwnedHideout(hideout, false);
+      }
+      else //the player has lost, clear the indicator that they wanted to take the hideout
+      {
+        hideout.IsTaken = false;
+      }
+    }
+  }
+  */
 
   //TODO common function for removing parties from clan parties VM that takes some comparison function
 
