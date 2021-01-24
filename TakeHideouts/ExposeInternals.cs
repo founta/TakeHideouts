@@ -135,6 +135,18 @@ namespace TakeHideouts
     {
       return;
     }
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(HideoutCampaignBehavior), "CanChangeStatusOfTroop")]
+    public static bool CanChangeStatusOfTroop(HideoutCampaignBehavior __instance, CharacterObject character)
+    {
+      return false;
+    }
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(HideoutCampaignBehavior), "OnTroopRosterManageDone")]
+    public static void OnTroopRosterManageDone(HideoutCampaignBehavior __instance, TroopRoster hideoutTroops)
+    {
+      return;
+    }
     /*
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(PartyAi), "SetDefaultBehavior")]

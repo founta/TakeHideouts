@@ -59,7 +59,7 @@ namespace TakeHideouts
       args.optionLeaveType = GameMenuOption.LeaveType.Wait;
 
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
-      return hideout.IsTaken;      
+      return Common.IsOwnedHideout(hideout);      
     }
 
     private bool hideout_wait_menu_condition(MenuCallbackArgs args)

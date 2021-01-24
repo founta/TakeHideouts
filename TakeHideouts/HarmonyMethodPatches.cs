@@ -36,7 +36,7 @@ namespace TakeHideouts
   {
     static void Postfix(Hideout __instance, ref IFaction __result)
     {
-      if (__instance.IsTaken) //if we've taken the hideout, ignore the ifBandit check
+      if (Common.IsOwnedHideout(__instance)) //if we've taken the hideout, ignore the ifBandit check
       {
         bool factionSet = false;
         foreach (MobileParty party in __instance.Settlement.Parties)
@@ -53,6 +53,18 @@ namespace TakeHideouts
     }
   }
 
+  //patch IsBandit getter to exclude owned bandits
+  [HarmonyPatch(typeof(MobileParty), "IsBandit")]
+  [HarmonyPatch(MethodType.Getter)]
+  public class IsBanditPatch
+  {
+    static void Postfix(MobileParty __instance, ref bool __result)
+    {
+      if (Common.IsOwnedBanditParty(__instance)) //cannot be isbandit for owned bandits, as it will override our custom AI
+        __result = false;
+    }
+  }
+
   //patch Hideout IsInfested getter to always be false if hideout is taken
   //sometimes it is true for player owned hideouts?? don't know how that's possible though,
   //as IsBandit for player-owned parties is always false...
@@ -66,7 +78,7 @@ namespace TakeHideouts
   {
     static void Postfix(Hideout __instance, ref bool __result)
     {
-      if (__instance.IsTaken) //if we've taken the hideout, ignore the ifBandit check
+      if (Common.IsOwnedHideout(__instance)) //if we've taken the hideout, ignore the ifBandit check
       {
         __result = false;
       }
@@ -113,7 +125,7 @@ namespace TakeHideouts
     {
       if (__result != null)
       {
-        if (__result.IsTaken) //then it's a player-owned hideout
+        if (Common.IsOwnedHideout(__result)) //then it's a player-owned hideout
         {
           __result = (Hideout)null;
         }
@@ -132,9 +144,9 @@ namespace TakeHideouts
       if (__instance.MemberTransferState == PartyScreenLogic.TransferState.TransferableWithTrade && command.Type == PartyScreenLogic.TroopType.Member)
       {
         if (command.RosterSide == PartyScreenLogic.PartyRosterSide.Right)
-          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount + command.Character.PrisonerRansomValue(Hero.MainHero) * command.TotalNumber);
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount + Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
         else
-          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount - command.Character.PrisonerRansomValue(Hero.MainHero) * command.TotalNumber);
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount - Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
       }
     }    
   }
@@ -150,7 +162,7 @@ namespace TakeHideouts
       //if we've taken the hideout and we can attack it, disable attacking it
       if (__result && Settlement.CurrentSettlement.IsHideout())
       {
-        if (Settlement.CurrentSettlement.Hideout.IsTaken)
+        if (Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout))
         {
           __result = false;
         }
@@ -170,19 +182,29 @@ namespace TakeHideouts
         return;
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
-      //if the player has won against a hideout they plan to take, set as an owned hideout and add new bandit boss
+      //if the player has won against a hideout they plan to take, mark it as hideout to take
       if ((MapEvent.PlayerMapEvent.BattleState == BattleState.AttackerVictory) && hideout.IsTaken)
       {
-        Common.SetAsOwnedHideout(hideout, false);
-
-        MobileParty boss = Common.CreateOwnedBanditPartyInHideout(hideout);
-        boss.IsBanditBossParty = true;
+        HideoutOwnershipBehavior.hideoutToTake = hideout;
       }
       else //the player has lost, clear the indicator that they wanted to take the hideout
       {
         hideout.IsTaken = false;
+        HideoutOwnershipBehavior.hideoutToTake = null;
       }
     }
+    /*
+    //if the player has won against a hideout they plan to take, set as an owned hideout and add new bandit boss
+    if ((MapEvent.PlayerMapEvent.BattleState == BattleState.AttackerVictory) && hideout.IsTaken)
+    {
+      Common.SetAsOwnedHideout(hideout, false);
+
+      MobileParty boss = Common.CreateOwnedBanditPartyInHideout(hideout, isBoss: true);
+    }
+    else //the player has lost, clear the indicator that they wanted to take the hideout
+    {
+      hideout.IsTaken = false;
+    }*/
   }
 
   /*
@@ -211,34 +233,28 @@ public class MissionControllerPatch
 */
 
 
-  /*
-  [HarmonyPatch(typeof(MapEvent), "FinishBattle")]
+  [HarmonyPatch(typeof(PlayerEncounter), "DoEnd")]
   public class MapEventPatch
   {
     //static void Postfix(HideoutMissionController __instance)
-    static void Postfix(MapEvent __instance)
+    static void Postfix(PlayerEncounter __instance)
     {
-      if (!__instance.IsHideoutBattle)
+      if (HideoutOwnershipBehavior.hideoutToTake == null)
         return;
 
-      Settlement settlement = __instance.MapEventSettlement;
+      Hideout hideout = HideoutOwnershipBehavior.hideoutToTake;
+      Settlement settlement = hideout.Settlement;
 
-      if (!settlement.IsHideout())
-        return;
-      Hideout hideout = settlement.Hideout;
+      MobileParty newBoss = Common.CreateOwnedBanditPartyInHideout(hideout, isBoss: true); //add a party to prevent hideout from disappearing
+      newBoss.DisableAi();
 
-      //if the player has won against a hideout they plan to take, set as an owned hideout and add new bandit boss
-      if ((__instance.BattleState == BattleState.AttackerVictory) && hideout.IsTaken)
-      {
-        Common.SetAsOwnedHideout(hideout, false);
-      }
-      else //the player has lost, clear the indicator that they wanted to take the hideout
-      {
-        hideout.IsTaken = false;
-      }
+      hideout.IsSpotted = true;
+      settlement.IsVisible = true;
+      Common.SetAsOwnedHideout(hideout, true);
+
+      HideoutOwnershipBehavior.hideoutToTake = null;
     }
   }
-  */
 
   //TODO common function for removing parties from clan parties VM that takes some comparison function
 
@@ -423,13 +439,9 @@ public class MissionControllerPatch
         hideout = __instance.Settlement.Hideout;
       if (hideout == null)
         return;
- 
-      //only select parties whose home settlement is this hideout and if it is an owned hideout
-      if (mobileParty.HomeSettlement == null)
-        return;
-      if (mobileParty.HomeSettlement != hideout.Settlement)
-        return;
-      if (!hideout.IsTaken)
+
+      //only select owned bandit parties
+      if (!Common.IsOwnedBanditParty(mobileParty))
         return;
 
       //now take food from the hideout's food store. Prioritize lowest value food items
@@ -462,7 +474,7 @@ public class MissionControllerPatch
         int foodToTransfer = Math.Min(foodDifference, foodStore[cheapestFoodIdx].Amount);
 
         //transfer food
-        foodStore.AddToCountsAtIndex(cheapestFoodIdx, -foodToTransfer);
+        foodStore.AddToCounts(cheapestFood, -foodToTransfer);
         partyInventory.AddToCounts(cheapestFood, foodToTransfer);
 
       } while ((hideoutFoodCount > 0) && (partyFoodCount < desiredPartyFoodCount));

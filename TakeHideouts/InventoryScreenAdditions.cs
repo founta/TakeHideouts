@@ -20,15 +20,17 @@ namespace TakeHideouts
 {
   class InventoryScreenAdditions
   {
-    public static void OpenScreenAsManageInventory(ItemRoster roster) //same as open as stash, but says manage inventory
+    public static void OpenScreenAsManageInventory(ItemRoster roster, string header="Manage Inventory", InventoryManager.InventoryCategoryType focus = InventoryManager.InventoryCategoryType.None) //same as open as stash, but says manage inventory
     {
       //get access to private _currentMode and _inventoryLogic from InventoryManager
       ref InventoryMode currentMode = ref AccessTools.FieldRefAccess<InventoryManager, InventoryMode>(InventoryManager.Instance, "_currentMode");
       ref InventoryLogic inventoryLogic = ref AccessTools.FieldRefAccess<InventoryManager, InventoryLogic>(InventoryManager.Instance, "_inventoryLogic");
 
-      currentMode = InventoryMode.Stash;
+      currentMode = InventoryMode.Inventory;
       inventoryLogic = new InventoryLogic(Campaign.Current, (PartyBase)null);
-      inventoryLogic.Initialize(roster, MobileParty.MainParty, false, false, CharacterObject.PlayerCharacter, InventoryManager.InventoryCategoryType.None, ExposeInternals.GetCurrentMarketData(InventoryManager.Instance), false, new TextObject("Manage Inventory"));
+      inventoryLogic.Initialize(roster, MobileParty.MainParty.ItemRoster, MobileParty.MainParty.MemberRoster, false, false, 
+        CharacterObject.PlayerCharacter, focus, ExposeInternals.GetCurrentMarketData(InventoryManager.Instance), true, new TextObject(header));
+      inventoryLogic.SetDoneLogicDelegate(null);
       InventoryState state = Game.Current.GameStateManager.CreateState<InventoryState>();
       state.InitializeLogic(inventoryLogic);
       Game.Current.GameStateManager.PushState((GameState)state);

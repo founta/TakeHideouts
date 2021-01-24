@@ -54,7 +54,7 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Submenu;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout);
     }
 
 
@@ -62,12 +62,13 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Trade;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout);
     }
 
     private void hideout_stash_consequence(MenuCallbackArgs args)
     {
-      InventoryManager.OpenScreenAsStash(Settlement.CurrentSettlement.Stash);
+      InventoryScreenAdditions.OpenScreenAsManageInventory(Settlement.CurrentSettlement.Stash);
+      //InventoryManager.OpenScreenAsStash(Settlement.CurrentSettlement.Stash);
       return;
     }
 
@@ -75,7 +76,7 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Manage;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout);
     }
 
     private void hideout_troops_consequence(MenuCallbackArgs args)
@@ -84,7 +85,7 @@ namespace TakeHideouts
 
       //Allows putting troops in the settlement's party object. Appears to persist across saving/loading
       //can also see the prisoners you stick in the hideout here. that's fine
-      PartyScreenManager.OpenScreenAsLoot(hideout.Settlement.Party);
+      PartyScreenAdditions.OpenPartyScreenAsManagePersistentParty(hideout.Settlement.Party);
       return;
     }
 

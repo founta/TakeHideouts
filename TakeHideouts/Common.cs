@@ -37,15 +37,10 @@ namespace TakeHideouts
     }
 
     public static void SetAsOwnedHideout(Hideout hideout, bool barter=true)
-    {         
-      //This appears to default false for hideouts and doesn't appear to change anything
-      //for the hideouts. hopefully changing it doesn't break anything
-      //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
-      hideout.IsTaken = true;
-
+    {
       //re-initialize the owned hideout list when next requested
       Common.playerHideoutListDirty = true;
-
+      //InformationManager.DisplayMessage(new InformationMessage($"{hideout.Settlement.Parties.Count} parties"));
       foreach (MobileParty party in hideout.Settlement.Parties)
       {
         if (party.IsBandit || party.IsBanditBossParty) //don't change the main party
@@ -54,7 +49,16 @@ namespace TakeHideouts
           //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
           Common.SetAsOwnedHideoutParty(party, hideout);
         }
+        else
+        {
+          //InformationManager.DisplayMessage(new InformationMessage($"isbandit {party.IsBandit} isownedbandit {IsOwnedBanditParty(party)}"));
+        }
       }
+
+      //This appears to default false for hideouts and doesn't appear to change anything
+      //for the hideouts. hopefully changing it doesn't break anything
+      //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
+      hideout.IsTaken = true;
 
       if (barter)
       {
@@ -71,18 +75,29 @@ namespace TakeHideouts
     {
       if (party == null)
         return false;
-
-      Settlement home = party.HomeSettlement;
-      if (home == null || party.ActualClan == null)
+      if (party.ActualClan == null)
         return false;
 
-      //we only know if it's our bandit party based on its home settlement
-      //could also look in main party clan's party list, but this is easier
-      if (home.IsHideout())
-        if (home.Hideout.IsTaken)
+      //catches corrupted bandit patrols
+      if (party.BanditParty != null) //then it's a bandit party (we patch IsBandit so we have to use this)
+        if (party.ActualClan == Hero.MainHero.Clan)
           return true;
 
+      Settlement home = party.HomeSettlement;
+      if (home == null)
+        return false;
+
+      //we know if it's our bandit party based on its home settlement
+      //could also look in main party clan's party list, but this is easier
+      if (home.IsHideout())
+        return IsOwnedHideout(home.Hideout);
+
       return false;
+    }
+
+    public static bool IsOwnedHideout(Hideout hideout)
+    {
+      return hideout.IsTaken;
     }
 
     public static void GivePartyGrain(MobileParty party, int howMuch)
@@ -152,7 +167,7 @@ namespace TakeHideouts
       return playerHideouts;
     }
 
-    public static MobileParty CreateOwnedBanditPartyInHideout(Hideout hideout, int initialGold = 300)
+    public static MobileParty CreateOwnedBanditPartyInHideout(Hideout hideout, int initialGold = 300, bool isBoss=false)
     {
       Clan banditClan = null;
       foreach (Clan clan in Clan.BanditFactions)
@@ -163,7 +178,7 @@ namespace TakeHideouts
           break;
         }
       }
-      MobileParty banditParty = MBObjectManager.Instance.CreateObject<MobileParty>();
+      MobileParty banditParty = BanditPartyComponent.CreateBanditParty(banditClan, hideout, isBoss); //MBObjectManager.Instance.CreateObject<MobileParty>();
       banditParty.InitializeMobileParty(banditClan.Name, hideout.Settlement.Culture.BanditBossPartyTemplate,
         hideout.Settlement.Position2D, 0.0f, 0.0f);
 

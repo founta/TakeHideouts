@@ -15,6 +15,8 @@ using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
 using TaleWorlds.ObjectSystem;
 using TaleWorlds.Localization;
+using StoryMode.StoryModeObjects;
+using Helpers;
 
 using HarmonyLib;
 
@@ -73,17 +75,49 @@ namespace TakeHideouts
     private bool take_hideout_condition(MenuCallbackArgs args)
     {
       HideoutCampaignBehavior bhv = Campaign.Current.GetCampaignBehavior<HideoutCampaignBehavior>();
-      return ExposeInternals.AttackHideoutCondition(bhv, args);
+      return ExposeInternals.AttackHideoutCondition(bhv, args) && CanTakeHideout();
+    }
+
+    private bool CanChangeStatusOfTroop(CharacterObject character)
+    {
+      HideoutCampaignBehavior bhv = Campaign.Current.GetCampaignBehavior<HideoutCampaignBehavior>();
+      return ExposeInternals.CanChangeStatusOfTroop(bhv, character);
+    }
+
+    private void OnTroopRosterManageDone(TroopRoster hideoutTroops)
+    {
+      HideoutCampaignBehavior bhv = Campaign.Current.GetCampaignBehavior<HideoutCampaignBehavior>();
+      Settlement.CurrentSettlement.Hideout.IsTaken = true; //mark the hideout for taking if we win
+      ExposeInternals.OnTroopRosterManageDone(bhv, hideoutTroops);
     }
 
     private void take_hideout_consequence(MenuCallbackArgs args)
     {
       HideoutCampaignBehavior bhv = Campaign.Current.GetCampaignBehavior<HideoutCampaignBehavior>();
 
-      Settlement.CurrentSettlement.Hideout.IsTaken = true;
-      ExposeInternals.AttackHideoutConsequence(bhv, args);
+      //copy and pasted from decompiled DLL, mostly
+      //does the same thing as normal attack hideout but with modified ontrooprostermanagedone
+      int forHideoutMission = Campaign.Current.Models.BanditDensityModel.GetPlayerMaximumTroopCountForHideoutMission(MobileParty.MainParty);
+      TroopRoster dummyTroopRoster = TroopRoster.CreateDummyTroopRoster();
+      FlattenedTroopRoster strongestAndPriorTroops = MobilePartyHelper.GetStrongestAndPriorTroops(MobileParty.MainParty, forHideoutMission, true);
+      dummyTroopRoster.Add((IEnumerable<FlattenedTroopRosterElement>)strongestAndPriorTroops);
+      args.MenuContext.OpenManageHideoutTroops(dummyTroopRoster, new Func<CharacterObject, bool>(this.CanChangeStatusOfTroop), new Action<TroopRoster>(this.OnTroopRosterManageDone));
     }
 
+    private bool CanTakeHideout()
+    {
+      Hideout hideout = Settlement.CurrentSettlement.Hideout;
+      Settlement settlement = hideout.Settlement;
+
+      bool isStoryHideout = StoryMode.StoryMode.Current.MainStoryLine.BusyHideouts.Contains(hideout);
+
+
+      bool canTake = !Common.IsOwnedHideout(hideout);
+      if (isStoryHideout || !TakeHideoutsSettings.Instance.TakingHideoutsEnabled)
+        canTake = false;
+
+      return canTake;
+    }
 
     private bool hideout_claim_access_condition(MenuCallbackArgs args)
     {
@@ -94,7 +128,7 @@ namespace TakeHideouts
       //Maybe set hideout.Settlement.Party.Owner to the main hero? Seems to be null
 
       //bool ours = Settlement.CurrentSettlement.Hideout.MapFaction == (IFaction) Hero.MainHero.Clan;
-      return (!Settlement.CurrentSettlement.Hideout.IsTaken) && TakeHideoutsSettings.Instance.TakingHideoutsEnabled; //can only claim it if it is not already taken
+      return CanTakeHideout(); //can only claim it if it is not already taken
     }
 
     private void hideout_claim_consequence(MenuCallbackArgs args)
@@ -109,7 +143,7 @@ namespace TakeHideouts
         {
           foreach (TroopRosterElement member in party.MemberRoster)
           {
-            totalTroopCost += member.Number * member.Character.PrisonerRansomValue(Hero.MainHero);
+            totalTroopCost += member.Number * Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(member.Character, Hero.MainHero);
           }
         }
       }
@@ -197,6 +231,7 @@ namespace TakeHideouts
           if (party != MobileParty.MainParty)
           {
             party.ActualClan = originalBanditClan;
+            //party.Party.Owner = null;
           }
         }
 
@@ -214,6 +249,8 @@ namespace TakeHideouts
 
       return;
     }
+
+    static public Hideout hideoutToTake = null;
 
     //dunno what these do
     public override void RegisterEvents()

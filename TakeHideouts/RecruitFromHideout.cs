@@ -31,14 +31,14 @@ namespace TakeHideouts
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
       args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
 
-      return !hideout.IsTaken && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
+      return !Common.IsOwnedHideout(hideout) && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
     }
     private bool hideout_manage_access_condition(MenuCallbackArgs args)
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
       args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
 
-      return hideout.IsTaken;// && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
+      return Common.IsOwnedHideout(hideout);// && TakeHideoutsSettings.Instance.RecruitingBanditsEnabled;
     }
 
     //show list of parties from which to recruit
@@ -49,7 +49,7 @@ namespace TakeHideouts
 
       string inquiryHeader = "";
       string affirmativeLabel = "";
-      if (hideout.IsTaken)
+      if (Common.IsOwnedHideout(hideout))
       {
         inquiryHeader = "Choose bandit party to manage";
         affirmativeLabel = "Manage Troops";
@@ -74,7 +74,7 @@ namespace TakeHideouts
 
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
-      if (hideout.IsTaken)
+      if (Common.IsOwnedHideout(hideout))
         PartyScreenAdditions.OpenPartyScreenAsManageParty(party.Party);
       else
         PartyScreenAdditions.OpenPartyScreenAsBuyTroops(party.Party);

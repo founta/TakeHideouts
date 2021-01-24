@@ -22,15 +22,32 @@ namespace TakeHideouts
     public void AiHourlyTick(MobileParty mobileParty, PartyThinkParams p)
     {
       //exclude all parties, other than owned bandit patrols
-      if (mobileParty.HomeSettlement == null)
-        return;
-      if (!mobileParty.HomeSettlement.IsHideout())
+      if (!Common.IsOwnedBanditParty(mobileParty))
         return;
       if (mobileParty.IsVillager || mobileParty.IsMilitia || mobileParty.IsBandit || mobileParty.IsBanditBossParty || mobileParty.IsCaravan || mobileParty.IsGarrison)
         return;
 
+      //if the party is homeless (home settlement not owned hideout) then try to re-home the bandit party
+      bool rehome = false;
+      if (mobileParty.HomeSettlement == null)
+        rehome = true;
+      else if (mobileParty.HomeSettlement.Hideout == null)
+        rehome = true;
+      else if (!Common.IsOwnedHideout(mobileParty.HomeSettlement.Hideout))
+        rehome = true;
+
+      if (rehome)
+      {
+        List<Hideout> ownedHideouts = Common.GetPlayerOwnedHideouts();
+        if (ownedHideouts.Count == 0)
+          return;
+        mobileParty.HomeSettlement = ownedHideouts[0].Settlement;
+        InformationManager.DisplayMessage(new InformationMessage($"Corrupted owned bandit party re-homed"));
+      }
+
+
       Hideout hideout = mobileParty.HomeSettlement.Hideout;
-      if (!hideout.IsTaken) //parties with taken home hideout == owned hideout bandit patrols
+      if (!Common.IsOwnedHideout(hideout)) //parties with taken home hideout == owned hideout bandit patrols
         return;
 
       AIBehaviorTuple patrolKey = new AIBehaviorTuple((IMapPoint)mobileParty.HomeSettlement, AiBehavior.PatrolAroundPoint);
@@ -45,7 +62,6 @@ namespace TakeHideouts
         returnToHideoutScore += 50;
       if (mobileParty.DefaultBehavior == AiBehavior.PatrolAroundPoint) //when we have the patrols dispatched
         patrolScore += 50;
-
 
       //want to return to hideout if low on food, keep or return to patrolling if fine on food
       //TODO add some random element?

@@ -81,7 +81,7 @@ namespace TakeHideouts
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
-      InventoryScreenAdditions.OpenScreenAsManageInventory(hideout.Settlement.Party.ItemRoster);
+      InventoryScreenAdditions.OpenScreenAsManageInventory(hideout.Settlement.Party.ItemRoster, header: "Manage Food Store", focus:InventoryManager.InventoryCategoryType.Goods);
       return;
     }
 
@@ -153,6 +153,8 @@ namespace TakeHideouts
       TroopRoster leftPrisonRoster,
       TroopRoster rightMemberRoster,
       TroopRoster rightPrisonRoster,
+      FlattenedTroopRoster takenPrisonerRoster,
+      FlattenedTroopRoster releasedPrisonerRoster,
       bool isForced,
       List<MobileParty> leftParties = null,
       List<MobileParty> rigthParties = null)
@@ -189,11 +191,12 @@ namespace TakeHideouts
       {
         if (party.HomeSettlement == hideout.Settlement && !party.IsBanditBossParty)
         {
-          //InformationManager.DisplayMessage(new InformationMessage($"bandit ai state {party.Ai.AiState} new decisions {party.Ai.DoNotMakeNewDecisions}"));
-
+          //InformationManager.DisplayMessage(new InformationMessage($"bandit ai state {party.Ai.AiState} new decisions {party.Ai.DoNotMakeNewDecisions} is bandit {party.IsBandit}"));
           party.SetMoveGoToSettlement(hideout.Settlement);
           party.Ai.SetAIState(AIState.VisitingHideout);
           party.Ai.SetDoNotMakeNewDecisions(true); //TODO this makes it so they can't run away from stronger parties..
+          //InformationManager.DisplayMessage(new InformationMessage($"Moving to hideout..."));
+
           //party.Ai.RethinkAtNextHourlyTick = true; //no
           //EnterSettlementAction.ApplyForParty()
         }
