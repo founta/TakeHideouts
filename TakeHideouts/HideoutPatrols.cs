@@ -187,8 +187,10 @@ namespace TakeHideouts
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
-      foreach (MobileParty party in Hero.MainHero.Clan.AllParties)
+      foreach (MobileParty party in MobileParty.All)
       {
+        if (!Common.IsOwnedBanditParty(party))
+          continue;
         if (party.HomeSettlement == hideout.Settlement && !party.IsBanditBossParty)
         {
           //InformationManager.DisplayMessage(new InformationMessage($"bandit ai state {party.Ai.AiState} new decisions {party.Ai.DoNotMakeNewDecisions} is bandit {party.IsBandit}"));
@@ -214,9 +216,14 @@ namespace TakeHideouts
     {
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
+      List<MobileParty> partiesToRemove = new List<MobileParty>();
       foreach (MobileParty party in hideout.Settlement.Parties)
       {
-        if (party != MobileParty.MainParty && !party.IsBanditBossParty)
+        if (party.MemberRoster.Count == 0)
+        {
+          partiesToRemove.Add(party);
+        }
+        else if (party != MobileParty.MainParty && !party.IsBanditBossParty)
         {
           party.SetMovePatrolAroundSettlement(hideout.Settlement);
           party.Ai.SetAIState(AIState.PatrollingAroundLocation);
@@ -224,6 +231,9 @@ namespace TakeHideouts
           //party.Ai.SetDoNotMakeNewDecisions(true);
         }
       }
+
+      foreach (MobileParty party in partiesToRemove)
+        party.RemoveParty();
     }
 
     //dunno what these do

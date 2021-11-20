@@ -79,10 +79,10 @@ namespace TakeHideouts
         return false;
 
       //catches corrupted bandit patrols
-      if (party.BanditParty != null) //then it's a bandit party (we patch IsBandit so we have to use this)
+      if (party.BanditPartyComponent != null) //then it's a bandit party (we patch IsBandit so we have to use this)
         if (party.ActualClan == Hero.MainHero.Clan)
           return true;
-
+      /*
       Settlement home = party.HomeSettlement;
       if (home == null)
         return false;
@@ -91,7 +91,7 @@ namespace TakeHideouts
       //could also look in main party clan's party list, but this is easier
       if (home.IsHideout())
         return IsOwnedHideout(home.Hideout);
-
+      */
       return false;
     }
 
@@ -178,9 +178,9 @@ namespace TakeHideouts
           break;
         }
       }
-      MobileParty banditParty = BanditPartyComponent.CreateBanditParty(banditClan, hideout, isBoss); //MBObjectManager.Instance.CreateObject<MobileParty>();
-      banditParty.InitializeMobileParty(banditClan.Name, hideout.Settlement.Culture.BanditBossPartyTemplate,
-        hideout.Settlement.Position2D, 0.0f, 0.0f);
+      MobileParty banditParty = BanditPartyComponent.CreateBanditParty("takehideouts_party", banditClan, hideout, isBoss); //MBObjectManager.Instance.CreateObject<MobileParty>();
+      banditParty.InitializeMobileParty(hideout.Settlement.Culture.BanditBossPartyTemplate,
+        hideout.Settlement.Position2D, 0.0f, 0.0f); //name? id?
 
       banditParty.InitializePartyTrade(initialGold);
 //      Common.GivePartyGrain(banditParty, 20);
@@ -223,7 +223,7 @@ namespace TakeHideouts
             new InquiryElement(
               (object)party,
               $"Bandit party {banditPartyCounter++} ({party.Party.MemberRoster.TotalManCount} troops" + foodAdd + ")",
-              new ImageIdentifier(CharacterCode.CreateFrom(party.Party.MemberRoster.ElementAt(0).Character)) //show sweet image of first troop
+              new ImageIdentifier(CharacterCode.CreateFrom(party.Party.MemberRoster.GetCharacterAtIndex(0))) //show sweet image of first troop
               )
             );
         }
@@ -236,10 +236,18 @@ namespace TakeHideouts
     {
       if (parties != null)
       {
-        foreach (MobileParty party in parties)
+        List<int> removalIdxs = new List<int>();
+        for (int i = 0; i < parties.Count; ++i)
         {
+          MobileParty party = parties[i];
           if (party.MemberRoster.Count == 0)
-            party.RemoveParty();
+            removalIdxs.Add(i);
+        }
+
+        removalIdxs.Reverse();
+        for (int i = 0; i < removalIdxs.Count; ++i)
+        {
+          parties[removalIdxs[i]].RemoveParty();
         }
       }
     }

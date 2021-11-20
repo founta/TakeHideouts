@@ -141,7 +141,7 @@ namespace TakeHideouts
       {
         if (party.IsBandit || party.IsBanditBossParty)
         {
-          foreach (TroopRosterElement member in party.MemberRoster)
+          foreach (TroopRosterElement member in party.MemberRoster.GetTroopRoster())
           {
             totalTroopCost += member.Number * Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(member.Character, Hero.MainHero);
           }

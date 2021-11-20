@@ -133,6 +133,22 @@ namespace TakeHideouts
     }
   }
 
+  //patch AddBanditToHideout to never allow adding bandits to player owned hideouts
+  [HarmonyPatch(typeof(BanditsCampaignBehavior), "AddBanditToHideout")]
+  public class AddBanditToHideoutPatch
+  {
+    static bool Prefix(BanditsCampaignBehavior __instance, Hideout hideoutComponent, PartyTemplateObject overridenPartyTemplate, bool isBanditBossParty,
+      ref MobileParty __result)
+    {
+      if (Common.IsOwnedHideout(hideoutComponent)) //then it's a player-owned hideout
+      {
+        __result = (MobileParty)null;
+        return false;
+      }
+      return true;
+    }
+  }
+
   //patch troop transfer method to allow trading of party members
   //used to only allow trading prisoners
   //This is mostly copy-pasted from decompiled DLL, modified slightly
@@ -332,10 +348,10 @@ public class MissionControllerPatch
   {
     static void Postfix(MobilePartyTrackerVM __instance)
     {
-      foreach (MobileParty party in Clan.PlayerClan.AllParties)
+      foreach (WarPartyComponent party in Clan.PlayerClan.WarPartyComponents)
       {
-        if (Common.IsOwnedBanditParty(party))
-          ExposeInternals.RemoveIfExists(__instance, party);
+        if (Common.IsOwnedBanditParty(party.MobileParty))
+          ExposeInternals.RemoveIfExists(__instance, party.MobileParty);
       }
     }
     static bool Prepare()
@@ -350,10 +366,10 @@ public class MissionControllerPatch
   {
     static void Postfix(MobilePartyTrackerVM __instance)
     {
-      foreach (MobileParty party in Clan.PlayerClan.AllParties)
+      foreach (WarPartyComponent party in Clan.PlayerClan.WarPartyComponents)
       {
-        if (Common.IsOwnedBanditParty(party) && party.IsBanditBossParty)
-            ExposeInternals.RemoveIfExists(__instance, party);
+        if (Common.IsOwnedBanditParty(party.MobileParty) && party.MobileParty.IsBanditBossParty)
+            ExposeInternals.RemoveIfExists(__instance, party.MobileParty);
       }
     }
   }
@@ -427,7 +443,7 @@ public class MissionControllerPatch
 
   //have owned bandit parties get food from the food store
   [HarmonyPatch(typeof(SettlementComponent), "OnPartyEntered")]
-  public class EnterSettlementPatch
+  public class EnterSettlementFoodPatch
   {
     static void Postfix(SettlementComponent __instance, MobileParty mobileParty)
     {
@@ -478,6 +494,110 @@ public class MissionControllerPatch
         partyInventory.AddToCounts(cheapestFood, foodToTransfer);
 
       } while ((hideoutFoodCount > 0) && (partyFoodCount < desiredPartyFoodCount));
+
+      //transfer any prisoners to the hideout
+      TroopRoster destinationPrisoners = hideout.Settlement.Party.PrisonRoster;
+      if (mobileParty.PrisonRoster.Count > 0)
+      {
+        destinationPrisoners.Add(mobileParty.PrisonRoster.ToFlattenedRoster());
+        mobileParty.PrisonRoster.Clear();
+      }
+
+      //transfer any loot to the hideout stash
+      ItemRoster destinationStash = hideout.Settlement.Stash;
+      bool partyHasLoot = true;
+      while (partyHasLoot)
+      {
+        List<ItemObject> lootItems = new List<ItemObject>();
+
+        //loop through party inventory to look for loot
+        bool lootFound = false;
+        for (int i = 0; i < partyInventory.Count; ++i)
+        {
+          ItemObject item = partyInventory.GetItemAtIndex(i);
+          if (!item.IsFood)
+          {
+            lootItems.Add(item);
+            lootFound = true;
+          }
+        }
+
+        if (!lootFound)
+          partyHasLoot = false;
+        else
+        {
+          for (int i = 0; i < lootItems.Count; ++i) //add to the stash and remove from the party
+          {
+            ItemObject item = lootItems[i];
+            int numItems = partyInventory.GetItemNumber(item);
+            destinationStash.AddToCounts(item, numItems);
+            partyInventory.AddToCounts(item, -numItems);
+          }
+        }
+      }
+    }
+  }
+
+
+  //have owned bandit parties get food from the food store
+  [HarmonyPatch(typeof(SettlementComponent), "OnPartyEntered")]
+  public class EnterSettlementLootPatch
+  {
+    static void Postfix(SettlementComponent __instance, MobileParty mobileParty)
+    {
+      if (mobileParty == null)
+        return;
+
+      Hideout hideout = null;
+      if (__instance.IsHideout())
+        hideout = __instance.Settlement.Hideout;
+      if (hideout == null)
+        return;
+
+      //only select owned bandit parties
+      if (!Common.IsOwnedBanditParty(mobileParty))
+        return;
+
+      ItemRoster partyInventory = mobileParty.Party.ItemRoster;
+
+      //transfer any prisoners to the hideout
+      if (mobileParty.PrisonRoster.Count > 0)
+      {
+        hideout.Settlement.Party.PrisonRoster.Add(mobileParty.PrisonRoster.ToFlattenedRoster());
+        mobileParty.PrisonRoster.Clear();
+      }
+
+      //transfer any loot to the hideout stash
+      bool partyHasLoot = true;
+      while (partyHasLoot)
+      {
+        List<ItemObject> lootItems = new List<ItemObject>();
+
+        //loop through party inventory to look for loot
+        bool lootFound = false;
+        for (int i = 0; i < partyInventory.Count; ++i)
+        {
+          ItemObject item = partyInventory.GetItemAtIndex(i);
+          if (!item.IsFood)
+          {
+            lootItems.Add(item);
+            lootFound = true;
+          }
+        }
+
+        if (!lootFound)
+          partyHasLoot = false;
+        else
+        {
+          for (int i = 0; i < lootItems.Count; ++i) //add to the stash and remove from the party
+          {
+            ItemObject item = lootItems[i];
+            int numItems = partyInventory.GetItemNumber(item);
+            hideout.Settlement.Stash.AddToCounts(item, numItems);
+            partyInventory.AddToCounts(item, -numItems);
+          }
+        }
+      }
     }
   }
 

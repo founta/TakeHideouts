@@ -64,7 +64,6 @@ namespace TakeHideouts
 
     private bool hideout_wait_menu_condition(MenuCallbackArgs args)
     {
-      args.MenuContext.GameMenu.AllowWaitingAutomatically();
       return hideout_wait_condition(args);
     }
 
