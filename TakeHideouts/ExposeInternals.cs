@@ -19,7 +19,7 @@ using HarmonyLib;
 
 namespace TakeHideouts
 {
-  [HarmonyPatch]
+  //[HarmonyPatch]
   public class ExposeInternals
   {
 

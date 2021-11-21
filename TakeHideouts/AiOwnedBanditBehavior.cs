@@ -41,7 +41,7 @@ namespace TakeHideouts
         List<Hideout> ownedHideouts = Common.GetPlayerOwnedHideouts();
         if (ownedHideouts.Count == 0)
           return;
-        mobileParty.HomeSettlement = ownedHideouts[0].Settlement;
+        mobileParty.SetCustomHomeSettlement(ownedHideouts[0].Settlement);
         InformationManager.DisplayMessage(new InformationMessage($"Corrupted owned bandit party re-homed"));
       }
 

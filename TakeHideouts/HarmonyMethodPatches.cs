@@ -160,9 +160,9 @@ namespace TakeHideouts
       if (__instance.MemberTransferState == PartyScreenLogic.TransferState.TransferableWithTrade && command.Type == PartyScreenLogic.TroopType.Member)
       {
         if (command.RosterSide == PartyScreenLogic.PartyRosterSide.Right)
-          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount + Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount + Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
         else
-          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.PartyGoldChangeAmount - Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount - Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
       }
     }    
   }
@@ -176,7 +176,7 @@ namespace TakeHideouts
     static void Postfix(HideoutCampaignBehavior __instance, ref bool __result)
     {
       //if we've taken the hideout and we can attack it, disable attacking it
-      if (__result && Settlement.CurrentSettlement.IsHideout())
+      if (__result && Settlement.CurrentSettlement.IsHideout)
       {
         if (Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout))
         {
@@ -194,7 +194,7 @@ namespace TakeHideouts
   {
     static void Postfix(HideoutMissionController __instance)
     {
-      if (!Settlement.CurrentSettlement.IsHideout())
+      if (!Settlement.CurrentSettlement.IsHideout)
         return;
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
@@ -426,7 +426,7 @@ public class MissionControllerPatch
           FiefBarterable fief = (FiefBarterable)item;
 
           Settlement settlement = AccessTools.FieldRefAccess<FiefBarterable, Settlement>(fief, "_settlement");
-          if (settlement.IsHideout())
+          if (settlement.IsHideout)
             removalIndices.Add(i);
         }
       }
@@ -451,7 +451,7 @@ public class MissionControllerPatch
         return;
 
       Hideout hideout = null;
-      if (__instance.IsHideout())
+      if (__instance.Settlement.IsHideout)
         hideout = __instance.Settlement.Hideout;
       if (hideout == null)
         return;
@@ -549,7 +549,7 @@ public class MissionControllerPatch
         return;
 
       Hideout hideout = null;
-      if (__instance.IsHideout())
+      if (__instance.Settlement.IsHideout)
         hideout = __instance.Settlement.Hideout;
       if (hideout == null)
         return;

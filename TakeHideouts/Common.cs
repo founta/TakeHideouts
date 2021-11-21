@@ -24,8 +24,8 @@ namespace TakeHideouts
     public static void SetAsOwnedHideoutParty(MobileParty party, Hideout hideout)
     {
       party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause (is this the right way to do this?)
-      party.Party.Owner = Hero.MainHero; //this makes it so that you can see them in the clan menu, and also so that you can get access to them later..
-      party.HomeSettlement = hideout.Settlement; //likely already set to this, doesn't seem to do anything
+      party.Party.SetCustomOwner(Hero.MainHero); //this makes it so that you can see them in the clan menu, and also so that you can get access to them later.
+      party.SetCustomHomeSettlement(hideout.Settlement); //likely already set to this, doesn't seem to do anything
 
       party.SetMoveGoToSettlement(party.HomeSettlement); //don't disperse when taking hideout
 
@@ -41,9 +41,10 @@ namespace TakeHideouts
       //re-initialize the owned hideout list when next requested
       Common.playerHideoutListDirty = true;
       //InformationManager.DisplayMessage(new InformationMessage($"{hideout.Settlement.Parties.Count} parties"));
+      List<MobileParty> parties_to_replace = new List<MobileParty>();
       foreach (MobileParty party in hideout.Settlement.Parties)
       {
-        if (party.IsBandit || party.IsBanditBossParty) //don't change the main party
+        if (party.IsBanditBossParty || party.IsBandit) //convert the bandit leader
         {
           //InformationManager.DisplayMessage(new InformationMessage($"Clan leader {(party.ActualClan.Leader == null ? "null" : "not null")}"));
           //InformationManager.DisplayMessage(new InformationMessage($"Leader {party.ActualClan.Leader.Name.ToString()}"));
@@ -51,9 +52,27 @@ namespace TakeHideouts
         }
         else
         {
-          //InformationManager.DisplayMessage(new InformationMessage($"isbandit {party.IsBandit} isownedbandit {IsOwnedBanditParty(party)}"));
+         // InformationManager.DisplayMessage(new InformationMessage($"isbandit {party.IsBandit} isownedbandit {IsOwnedBanditParty(party)}"));
         }
       }
+
+      /*List<MobileParty> parties_to_remove = new List<MobileParty>();
+      foreach (MobileParty party in parties_to_replace)
+      {
+        MobileParty new_party = Common.CreateOwnedBanditPartyInHideout(hideout, 60);
+        new_party.MemberRoster.Clear();
+        foreach (TroopRosterElement member in party.MemberRoster.GetTroopRoster())
+        {
+          new_party.AddElementToMemberRoster(member.Character, member.Number);
+        }
+        parties_to_remove.Add(party);
+        InformationManager.DisplayMessage(new InformationMessage($"Added new party and transferred troops"));
+      }
+      foreach (MobileParty party in parties_to_remove)
+      {
+        InformationManager.DisplayMessage(new InformationMessage($"Removed party"));
+        party.RemoveParty();
+      }*/
 
       //This appears to default false for hideouts and doesn't appear to change anything
       //for the hideouts. hopefully changing it doesn't break anything
@@ -158,7 +177,7 @@ namespace TakeHideouts
       {
         playerHideouts = new List<Hideout>();
         foreach (Settlement s in Settlement.All)
-          if (s.IsHideout())
+          if (s.IsHideout)
             if (s.Hideout.IsTaken)
               playerHideouts.Add(s.Hideout);
         playerHideoutListDirty = false;
