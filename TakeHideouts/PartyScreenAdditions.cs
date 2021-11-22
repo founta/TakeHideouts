@@ -22,7 +22,6 @@ namespace TakeHideouts
       //get access to private _currentMode and _partyScreenLogic from PartyScreenManager
       ref PartyScreenMode currentMode = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenMode>(PartyScreenManager.Instance, "_currentMode");
       ref PartyScreenLogic partyScreenLogic = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenLogic>(PartyScreenManager.Instance, "_partyScreenLogic");
-
       //harmony patch in PartyScreenLogic is what allows buying troops with TransferableWithTrade set as the transfer type
       currentMode = PartyScreenMode.TroopsManage;
       partyScreenLogic = new PartyScreenLogic();
@@ -31,6 +30,8 @@ namespace TakeHideouts
       partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenAdditions.TroopOnlyLeftTransferableDelegate));
 // partyScreenLogic.SetDoneHandler(new PartyPresentationDoneButtonDelegate(PartyScreenAdditions.partyEmptyDoneHandler));
       partyScreenLogic.Parties[0].Add(partyToBuyFrom.MobileParty);
+      ExposeInternals.SetIsDonating(PartyScreenManager.Instance, false);
+
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
       state.InitializeLogic(partyScreenLogic);
       Game.Current.GameStateManager.PushState((GameState)state);

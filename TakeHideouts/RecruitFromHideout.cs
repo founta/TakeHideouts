@@ -75,9 +75,15 @@ namespace TakeHideouts
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
 
       if (Common.IsOwnedHideout(hideout))
+      {
         PartyScreenAdditions.OpenPartyScreenAsManageParty(party.Party);
+        //InformationManager.DisplayMessage(new InformationMessage($"Manage owned hideout troops"));
+      }
       else
+      {
         PartyScreenAdditions.OpenPartyScreenAsBuyTroops(party.Party);
+        //InformationManager.DisplayMessage(new InformationMessage($"Purchase hideout troops"));
+      }
     }
 
     //dunno what these do

@@ -159,12 +159,20 @@ namespace TakeHideouts
     {
       if (__instance.MemberTransferState == PartyScreenLogic.TransferState.TransferableWithTrade && command.Type == PartyScreenLogic.TroopType.Member)
       {
+        //TODO this doesn't show gold change as you add/remove troops
         if (command.RosterSide == PartyScreenLogic.PartyRosterSide.Right)
-          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount + Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
+        {
+          //ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount + Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
+          __instance.CurrentData.PartyGoldChangeAmount += Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
+        }
         else
-          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount - Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
+        {
+          __instance.CurrentData.PartyGoldChangeAmount -= Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
+          //ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount - Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
+        }
+        //InformationManager.DisplayMessage(new InformationMessage($"Transferrable with trade! changed gold amount to {__instance.CurrentData.PartyGoldChangeAmount}... ransom value {Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero)}, number {command.TotalNumber}"));
       }
-    }    
+    }
   }
 
   //patch 'Wait until nightfall' on_condition to disable attacking the hideout

@@ -43,6 +43,14 @@ namespace TakeHideouts
     }
 
     [HarmonyReversePatch]
+    [HarmonyPatch(typeof(PartyScreenManager), "IsDonating")]
+    [HarmonyPatch(MethodType.Setter)]
+    public static void SetIsDonating(PartyScreenManager instance, bool value)
+    {
+      return;
+    }
+
+    [HarmonyReversePatch]
     [HarmonyPatch(typeof(BanditsCampaignBehavior), "InitBanditParty")]
     public static void InitBanditParty(BanditsCampaignBehavior instance, MobileParty banditParty, TaleWorlds.Localization.TextObject name, Clan faction, Settlement homeSettlement)
     {
