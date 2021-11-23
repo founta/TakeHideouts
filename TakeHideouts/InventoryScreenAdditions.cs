@@ -29,7 +29,7 @@ namespace TakeHideouts
       currentMode = InventoryMode.Stash;
       inventoryLogic = new InventoryLogic(Campaign.Current, (PartyBase)null);
       inventoryLogic.Initialize(roster, MobileParty.MainParty, false, false, CharacterObject.PlayerCharacter, focus, 
-        (IMarketData) new ExposeInternals.FakeMarketData(), false, new TextObject(header));
+        ExposeInternals.GetCurrentMarketData(InventoryManager.Instance), false, new TextObject(header));
       InventoryState state = Game.Current.GameStateManager.CreateState<InventoryState>();
       state.InitializeLogic(inventoryLogic);
       Game.Current.GameStateManager.PushState((GameState)state);

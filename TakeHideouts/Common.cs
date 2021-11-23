@@ -33,7 +33,9 @@ namespace TakeHideouts
       //is there an actual way to do this (that's not an internal method)?? Users report
       //that bandit groups still use up slots sometimes but the issue is fixed on 
       //abandoning/re-claiming hideout.
-      ExposeInternals.RemoveWarPartyInternal(Hero.MainHero.Clan, party);
+      if (Hero.MainHero.Clan.WarPartyComponents.Contains(party.WarPartyComponent))
+        ExposeInternals.RemoveWarPartyInternal(Hero.MainHero.Clan, party.WarPartyComponent);
+      //Hero.MainHero.Clan.RemovePartyInternal(party.Party);
     }
 
     public static void SetAsOwnedHideout(Hideout hideout, bool barter=true)
@@ -77,7 +79,7 @@ namespace TakeHideouts
       //This appears to default false for hideouts and doesn't appear to change anything
       //for the hideouts. hopefully changing it doesn't break anything
       //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
-      hideout.IsTaken = true;
+      hideout.Settlement.SettlementTaken = true;
 
       if (barter)
       {
@@ -116,7 +118,9 @@ namespace TakeHideouts
 
     public static bool IsOwnedHideout(Hideout hideout)
     {
-      return hideout.IsTaken;
+      if (hideout.Settlement == null)
+        return false;
+      return hideout.Settlement.SettlementTaken; // hideout.Settlement.Owner == Hero.MainHero;
     }
 
     public static void GivePartyGrain(MobileParty party, int howMuch)
@@ -178,7 +182,7 @@ namespace TakeHideouts
         playerHideouts = new List<Hideout>();
         foreach (Settlement s in Settlement.All)
           if (s.IsHideout)
-            if (s.Hideout.IsTaken)
+            if (Common.IsOwnedHideout(s.Hideout))
               playerHideouts.Add(s.Hideout);
         playerHideoutListDirty = false;
       }

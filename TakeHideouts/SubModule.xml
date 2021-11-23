@@ -1,7 +1,7 @@
 <Module>
     <Name value="Take Hideouts"/>
     <Id value="TakeHideouts"/>
-    <Version value="v1.9.5"/>
+    <Version value="v1.9.6"/>
     <SingleplayerModule value="true"/>
     <MultiplayerModule value="false"/>
     <DependedModules>

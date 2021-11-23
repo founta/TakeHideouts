@@ -67,14 +67,14 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Submenu;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout);
     }
 
     private bool patrol_manage_food_store_condition(MenuCallbackArgs args)
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Trade;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout) && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
     }
 
     private void patrol_manage_food_store_consequence(MenuCallbackArgs args)
@@ -90,7 +90,7 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Trade;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout) && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
     }
 
     //show list of parties from which to recruit
@@ -123,7 +123,7 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.ManageHideoutTroops;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout) && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
     }
 
     private void patrol_create_consequence(MenuCallbackArgs args)
@@ -180,7 +180,7 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.DefendAction;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout) && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
     }
 
     public static void patrol_recall_consequence(MenuCallbackArgs args)
@@ -209,7 +209,7 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.HostileAction;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout) && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
     }
 
     public static void patrol_send_consequence(MenuCallbackArgs args)

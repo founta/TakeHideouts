@@ -203,7 +203,7 @@ namespace TakeHideouts
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Escape;
 
-      return Settlement.CurrentSettlement.Hideout.IsTaken;
+      return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout);
     }
 
     private void hideout_abandon_consequence(MenuCallbackArgs args)
@@ -218,6 +218,7 @@ namespace TakeHideouts
       {
         ref Hideout hideout = ref Settlement.CurrentSettlement.Hideout;
         hideout.IsTaken = false;
+        hideout.Settlement.SettlementTaken = false;
         Common.playerHideoutListDirty = true;
 
         //get correct original bandit clan

@@ -162,13 +162,13 @@ namespace TakeHideouts
         //TODO this doesn't show gold change as you add/remove troops
         if (command.RosterSide == PartyScreenLogic.PartyRosterSide.Right)
         {
-          //ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount + Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
-          __instance.CurrentData.PartyGoldChangeAmount += Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount + Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
+          //__instance.CurrentData.PartyGoldChangeAmount += Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
         }
         else
         {
-          __instance.CurrentData.PartyGoldChangeAmount -= Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
-          //ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount - Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
+          //__instance.CurrentData.PartyGoldChangeAmount -= Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount - Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
         }
         //InformationManager.DisplayMessage(new InformationMessage($"Transferrable with trade! changed gold amount to {__instance.CurrentData.PartyGoldChangeAmount}... ransom value {Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero)}, number {command.TotalNumber}"));
       }
@@ -346,9 +346,16 @@ public class MissionControllerPatch
     static void Postfix(MobileParty __instance)
     {
       if (Common.IsOwnedBanditParty(__instance))
-        ExposeInternals.RemoveWarPartyInternal(__instance.ActualClan, __instance);
+      {
+        if (Hero.MainHero.Clan.WarPartyComponents.Contains(__instance.WarPartyComponent))
+          ExposeInternals.RemoveWarPartyInternal(Hero.MainHero.Clan, __instance.WarPartyComponent);
+        //ExposeInternals.RemovePartyInternal(Hero.MainHero.Clan, __instance.Party);
+        //ExposeInternals.RemoveWarPartyInternal(__instance.ActualClan, __instance);
+      }
     }
   }
+
+  //Patch 
 
   //patch mobile tracker VM so that we can't see bandit parties on the map, if the user wants
   [HarmonyPatch(typeof(MobilePartyTrackerVM), "InitList")]

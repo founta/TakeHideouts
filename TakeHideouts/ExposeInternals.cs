@@ -19,31 +19,9 @@ using HarmonyLib;
 
 namespace TakeHideouts
 {
-  //[HarmonyPatch]
+  [HarmonyPatch]
   public class ExposeInternals
   {
-
-    //copy/pasted from decompiled DLL
-    public class FakeMarketData : IMarketData
-    {
-      public int GetPrice(
-        ItemObject item,
-        MobileParty tradingParty,
-        bool isSelling,
-        PartyBase merchantParty)
-      {
-        return item.Value;
-      }
-
-      public int GetPrice(
-        EquipmentElement itemRosterElement,
-        MobileParty tradingParty,
-        bool isSelling,
-        PartyBase merchantParty)
-      {
-        return itemRosterElement.ItemValue;
-      }
-    }
 
     //expose internal function Clan.RemoveWarPartyInternal
     //this shouldn't cause any problems to use
@@ -52,7 +30,7 @@ namespace TakeHideouts
     //after removing them from war parties, you can no longer 
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(Clan), "RemoveWarPartyInternal")]
-    public static void RemoveWarPartyInternal(Clan instance, MobileParty warparty)
+    public static void RemoveWarPartyInternal(Clan instance, WarPartyComponent warparty)
     {
       return;
     }
@@ -100,12 +78,14 @@ namespace TakeHideouts
       return;
     }
 
+    /*
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(Campaign), "InitializeTypes")]
     public static void InitializeTypes(Campaign instance)
     {
       return;
     }
+    */
 
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(PartyBase), "OnFinishLoadState")]
@@ -146,10 +126,18 @@ namespace TakeHideouts
     }
 
     [HarmonyReversePatch]
+    [HarmonyPatch(typeof(InventoryManager), "GetCurrentMarketData")]
+    public static IMarketData GetCurrentMarketData(InventoryManager __instance)
+    {
+      throw new NotImplementedException("GetCurrentMarketData not found");
+    }
+
+    [HarmonyReversePatch]
     [HarmonyPatch(typeof(HideoutCampaignBehavior), "game_menu_attack_hideout_parties_on_condition")]
     public static bool AttackHideoutCondition(HideoutCampaignBehavior __instance, MenuCallbackArgs args)
     {
-      return false; //overridden, right?
+      throw new NotImplementedException("game_menu_attack_hideout_parties_on_condition not found");
+      //return false; //overridden, right?
     }
 
     [HarmonyReversePatch]
