@@ -106,7 +106,14 @@ namespace TakeHideouts
 
     private bool CanTakeHideout()
     {
+      if (Settlement.CurrentSettlement == null)
+        return false;
+
       Hideout hideout = Settlement.CurrentSettlement.Hideout;
+
+      if (hideout == null)
+        return false;
+
       Settlement settlement = hideout.Settlement;
 
       bool isStoryHideout = StoryMode.StoryMode.Current.MainStoryLine.BusyHideouts.Contains(hideout);
