@@ -23,6 +23,28 @@ namespace TakeHideouts
   public class ExposeInternals
   {
 
+    //copy/pasted from decompiled DLL
+    public class FakeMarketData : IMarketData
+    {
+      public int GetPrice(
+        ItemObject item,
+        MobileParty tradingParty,
+        bool isSelling,
+        PartyBase merchantParty)
+      {
+        return item.Value;
+      }
+
+      public int GetPrice(
+        EquipmentElement itemRosterElement,
+        MobileParty tradingParty,
+        bool isSelling,
+        PartyBase merchantParty)
+      {
+        return itemRosterElement.ItemValue;
+      }
+    }
+
     //expose internal function Clan.RemoveWarPartyInternal
     //this shouldn't cause any problems to use
     //(war parties is only to calculate clan strength and take up
@@ -121,13 +143,6 @@ namespace TakeHideouts
     public static void SetHideoutWaitMeshName(SettlementComponent instance, string value)
     {
       return;
-    }
-
-    [HarmonyReversePatch]
-    [HarmonyPatch(typeof(InventoryManager), "GetCurrentMarketData")]
-    public static IMarketData GetCurrentMarketData(InventoryManager __instance)
-    {
-      return null;
     }
 
     [HarmonyReversePatch]
