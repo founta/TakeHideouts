@@ -116,7 +116,9 @@ namespace TakeHideouts
 
       Settlement settlement = hideout.Settlement;
 
-      bool isStoryHideout = StoryMode.StoryMode.Current.MainStoryLine.BusyHideouts.Contains(hideout);
+      bool isStoryHideout = false;
+      if (StoryMode.StoryMode.Current != null)
+        isStoryHideout = StoryMode.StoryMode.Current.MainStoryLine.BusyHideouts.Contains(hideout);
 
 
       bool canTake = !Common.IsOwnedHideout(hideout);
