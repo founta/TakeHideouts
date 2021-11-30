@@ -13,8 +13,10 @@ using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
+using SandBox.ViewModelCollection.Nameplate;
 using TaleWorlds.ObjectSystem;
 using TaleWorlds.Localization;
+using TaleWorlds.Library;
 using StoryMode.StoryModeObjects;
 using Helpers;
 
@@ -61,6 +63,7 @@ namespace TakeHideouts
 {
   public class HideoutOwnershipBehavior : CampaignBehaviorBase
   {
+    public static MbEvent hideoutAbandonedEvent = new MbEvent();
     private void OnSessionLaunched(CampaignGameStarter campaignGameStarter)
     {
       campaignGameStarter.AddGameMenuOption("hideout_place", "takehideouts_purchase", "Purchase Hideout", hideout_claim_access_condition, hideout_claim_consequence, true);
@@ -204,7 +207,6 @@ namespace TakeHideouts
     private bool hideout_abandon_access_condition(MenuCallbackArgs args)
     {
       args.optionLeaveType = GameMenuOption.LeaveType.Escape;
-
       return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout);
     }
 
@@ -214,7 +216,6 @@ namespace TakeHideouts
       string inquiryText = $"You prepare to part ways with your hideout.\n"
         + "Are you sure you want to abandon the hideout? Ownership will revert back to the original bandit owners.";
       string inquiryTitle = "Abandon Hideout";
-
 
       Action inquiryAffirmative = () =>
       {
@@ -248,10 +249,11 @@ namespace TakeHideouts
         //re-opens hideout menu
         Campaign.Current.GameMenuManager.ExitToLast();
 
-        //remove ownership of hideout
-        //by setting it to the hero of that bandit clan
-        //hopefully doesn't blow anything up (doesn't appear to)
-        ChangeOwnerOfSettlementAction.ApplyByDefault(originalBanditClan.Leader, hideout.Settlement);
+        //TODO this doesn't update the nameplate to show red (it previously did when
+        // using the change of ownership event to the bandit hero, but those don't exist anymore)
+        hideout.Settlement.Party.Visuals.SetMapIconAsDirty();
+
+        hideoutAbandonedEvent.Invoke();
       };
 
       //shows the confirmation option to abandon hideout
@@ -262,7 +264,6 @@ namespace TakeHideouts
 
     static public Hideout hideoutToTake = null;
 
-    //dunno what these do
     public override void RegisterEvents()
     {
       CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, new Action<CampaignGameStarter>(this.OnSessionLaunched));

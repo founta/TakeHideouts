@@ -19,6 +19,9 @@ using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.Categories;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement;
 using TaleWorlds.Core.ViewModelCollection;
 using SandBox.ViewModelCollection.MobilePartyTracker;
+using SandBox.ViewModelCollection.Nameplate;
+using TaleWorlds.Library;
+using TaleWorlds.Engine;
 
 using SandBox.Source.Missions;
 
@@ -613,6 +616,38 @@ public class MissionControllerPatch
           }
         }
       }
+    }
+  }
+
+  //refresh nameplates on hideout abandon so that they turn red again
+  [HarmonyPatch(typeof(SettlementNameplatesVM), "Initialize")]
+  public class NameplateRegisterPatch
+  {
+    public class NameplateActionWrapper
+    {
+      SettlementNameplatesVM instance;
+      public NameplateActionWrapper(SettlementNameplatesVM instance)
+      {
+        this.instance = instance;
+      }
+      public void callRefreshRelations()
+      {
+        ExposeInternals.RefreshRelationsOfNameplates(instance);
+      }
+    }
+    static void Prefix(SettlementNameplatesVM __instance)
+    {
+      NameplateActionWrapper nameplateActioner = new NameplateActionWrapper(__instance);
+      HideoutOwnershipBehavior.hideoutAbandonedEvent.AddNonSerializedListener((object)__instance, new Action(nameplateActioner.callRefreshRelations));
+    }
+  }
+
+  [HarmonyPatch(typeof(SettlementNameplatesVM), "OnFinalize")]
+  public class NameplateUnregisterPatch
+  {
+    static void Postfix(SettlementNameplatesVM __instance)
+    {
+      HideoutOwnershipBehavior.hideoutAbandonedEvent.ClearListeners((object)__instance);
     }
   }
 

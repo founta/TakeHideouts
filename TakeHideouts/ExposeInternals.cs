@@ -11,7 +11,9 @@ using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.Towns;
 using SandBox.ViewModelCollection.MobilePartyTracker;
+using SandBox.View.Map;
 using TaleWorlds.SaveSystem;
+using SandBox.ViewModelCollection.Nameplate;
 
 using TaleWorlds.Library;
 
@@ -41,7 +43,23 @@ namespace TakeHideouts
     {
       return;
     }
+/*
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(PartyVisual), "IsEnemy")]
+    [HarmonyPatch(MethodType.Setter)]
+    public static void SetPVIsEnemy(PartyVisual instance, bool value)
+    {
+      return;
+    }
 
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(PartyVisual), "IsFriend")]
+    [HarmonyPatch(MethodType.Setter)]
+    public static void SetPVIsFriend(PartyVisual instance, bool value)
+    {
+      return;
+    }
+    */
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(PartyScreenManager), "IsDonating")]
     [HarmonyPatch(MethodType.Setter)]
@@ -158,6 +176,14 @@ namespace TakeHideouts
     {
       return;
     }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(SettlementNameplatesVM), "RefreshRelationsOfNameplates")]
+    public static void RefreshRelationsOfNameplates(SettlementNameplatesVM __instance)
+    {
+      return;
+    }
+
     /*
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(PartyAi), "SetDefaultBehavior")]
