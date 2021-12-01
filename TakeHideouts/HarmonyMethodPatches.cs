@@ -512,52 +512,11 @@ public class MissionControllerPatch
         partyInventory.AddToCounts(cheapestFood, foodToTransfer);
 
       } while ((hideoutFoodCount > 0) && (partyFoodCount < desiredPartyFoodCount));
-
-      //transfer any prisoners to the hideout
-      TroopRoster destinationPrisoners = hideout.Settlement.Party.PrisonRoster;
-      if (mobileParty.PrisonRoster.Count > 0)
-      {
-        destinationPrisoners.Add(mobileParty.PrisonRoster.ToFlattenedRoster());
-        mobileParty.PrisonRoster.Clear();
-      }
-
-      //transfer any loot to the hideout stash
-      ItemRoster destinationStash = hideout.Settlement.Stash;
-      bool partyHasLoot = true;
-      while (partyHasLoot)
-      {
-        List<ItemObject> lootItems = new List<ItemObject>();
-
-        //loop through party inventory to look for loot
-        bool lootFound = false;
-        for (int i = 0; i < partyInventory.Count; ++i)
-        {
-          ItemObject item = partyInventory.GetItemAtIndex(i);
-          if (!item.IsFood)
-          {
-            lootItems.Add(item);
-            lootFound = true;
-          }
-        }
-
-        if (!lootFound)
-          partyHasLoot = false;
-        else
-        {
-          for (int i = 0; i < lootItems.Count; ++i) //add to the stash and remove from the party
-          {
-            ItemObject item = lootItems[i];
-            int numItems = partyInventory.GetItemNumber(item);
-            destinationStash.AddToCounts(item, numItems);
-            partyInventory.AddToCounts(item, -numItems);
-          }
-        }
-      }
     }
   }
 
 
-  //have owned bandit parties get food from the food store
+  //have owned bandit parties drop off loot and prisoners
   [HarmonyPatch(typeof(SettlementComponent), "OnPartyEntered")]
   public class EnterSettlementLootPatch
   {

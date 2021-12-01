@@ -45,6 +45,7 @@ namespace TakeHideouts
         InformationManager.DisplayMessage(new InformationMessage($"Corrupted owned bandit party re-homed"));
       }
 
+      //InformationManager.DisplayMessage(new InformationMessage($"computing owned bandit decisions"));
 
       Hideout hideout = mobileParty.HomeSettlement.Hideout;
       if (!Common.IsOwnedHideout(hideout)) //parties with taken home hideout == owned hideout bandit patrols
@@ -69,8 +70,16 @@ namespace TakeHideouts
 
       float foodImportance = (float)Math.Exp(-0.25 * foodDays);
 
-      returnToHideoutScore *= foodImportance;
-      patrolScore *= (1 - foodImportance);
+      //as we get full on prisoners, become more and more wanting to return to base
+      float numPrisoners = mobileParty.Party.NumberOfPrisoners;
+      float prisonerLimit = mobileParty.Party.PrisonerSizeLimit;
+
+      float prisonerImportance = 1.0f - (float)Math.Exp(-1.5 * numPrisoners / prisonerLimit);
+
+      returnToHideoutScore *= Math.Max(foodImportance, prisonerImportance);
+      patrolScore *= (1 - Math.Max(foodImportance, prisonerImportance));
+
+      //InformationManager.DisplayMessage(new InformationMessage($"return score {returnToHideoutScore} (pimportance {prisonerImportance}) patrol score {patrolScore} (fimportance {foodImportance})"));
 
 
       //replace keys
