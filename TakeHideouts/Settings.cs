@@ -47,6 +47,10 @@ namespace TakeHideouts
     [SettingPropertyGroup("Bandit Patrols")]
     public bool HideoutPatrolsEnabled { get; set; } = true;
 
+    [SettingPropertyInteger("Hideout Patrol Party Size Limit", 20, 60, RequireRestart = false, HintText = "Changes the party size limit of owned bandit patrol parties.")]
+    [SettingPropertyGroup("Bandit Patrols")]
+    public int HideoutPatrolSize { get; set; } = 20;
+
     [SettingPropertyBool("Show Bandits on Party Screen", RequireRestart = true, HintText = "Whether or not to show bandit parties on the clan party page. " +
       "Disabling this will make it hard to disband them, if desired.")]
     [SettingPropertyGroup("Bandit Patrols")]

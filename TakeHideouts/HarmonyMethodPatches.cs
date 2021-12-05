@@ -23,6 +23,7 @@ using SandBox.ViewModelCollection.Nameplate;
 using TaleWorlds.Library;
 using TaleWorlds.Engine;
 
+using TaleWorlds.CampaignSystem.SandBox.GameComponents.Party;
 using SandBox.Source.Missions;
 
 using TaleWorlds.ObjectSystem;
@@ -610,4 +611,17 @@ public class MissionControllerPatch
     }
   }
 
+
+  //override the party size for owned bandit patrol parties
+  [HarmonyPatch(typeof(DefaultPartySizeLimitModel), "CalculateMobilePartyMemberSizeLimit")]
+  public class CalculateMobilePartyMemberSizeLimitPatch
+  {
+    static void Postfix(DefaultPartySizeLimitModel __instance, MobileParty party, bool includeDescriptions, ref ExplainedNumber __result)
+    {
+      if (Common.IsOwnedBanditParty(party))
+      {
+        __result = new ExplainedNumber(TakeHideoutsSettings.Instance.HideoutPatrolSize, includeDescriptions);
+      }
+    }
+  }
 }
