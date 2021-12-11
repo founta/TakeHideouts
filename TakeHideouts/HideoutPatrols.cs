@@ -121,7 +121,7 @@ namespace TakeHideouts
 
     private bool patrol_create_condition(MenuCallbackArgs args)
     {
-      args.optionLeaveType = GameMenuOption.LeaveType.ManageHideoutTroops;
+      args.optionLeaveType = GameMenuOption.LeaveType.TroopSelection;
 
       return Common.IsOwnedHideout(Settlement.CurrentSettlement.Hideout) && TakeHideoutsSettings.Instance.HideoutPatrolsEnabled;
     }

@@ -102,9 +102,12 @@ namespace TakeHideouts
       //does the same thing as normal attack hideout but with modified ontrooprostermanagedone
       int forHideoutMission = Campaign.Current.Models.BanditDensityModel.GetPlayerMaximumTroopCountForHideoutMission(MobileParty.MainParty);
       TroopRoster dummyTroopRoster = TroopRoster.CreateDummyTroopRoster();
-      FlattenedTroopRoster strongestAndPriorTroops = MobilePartyHelper.GetStrongestAndPriorTroops(MobileParty.MainParty, forHideoutMission, true);
-      dummyTroopRoster.Add((IEnumerable<FlattenedTroopRosterElement>)strongestAndPriorTroops);
-      args.MenuContext.OpenManageHideoutTroops(dummyTroopRoster, new Func<CharacterObject, bool>(this.CanChangeStatusOfTroop), new Action<TroopRoster>(this.OnTroopRosterManageDone));
+      TroopRoster strongestAndPriorTroops = MobilePartyHelper.GetStrongestAndPriorTroops(MobileParty.MainParty, forHideoutMission, true);
+      dummyTroopRoster.Add(strongestAndPriorTroops);
+      Campaign current = Campaign.Current;
+      int maxSelectableTroopCount = current != null ? current.Models.BanditDensityModel.GetPlayerMaximumTroopCountForHideoutMission(MobileParty.MainParty) : 0;
+
+      args.MenuContext.OpenTroopSelection(MobileParty.MainParty.MemberRoster, dummyTroopRoster, new Func<CharacterObject, bool>(this.CanChangeStatusOfTroop), new Action<TroopRoster>(this.OnTroopRosterManageDone), maxSelectableTroopCount);
     }
 
     private bool CanTakeHideout()
