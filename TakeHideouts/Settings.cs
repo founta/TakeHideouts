@@ -77,5 +77,13 @@ namespace TakeHideouts
     [SettingPropertyGroup("Hideout Menus")]
     public bool StashSubmenuEnabled { get; set; } = true;
 
+
+    [SettingPropertyFloatingInteger("Take hideout roguery gain multiplier", 0.0f, 10.0f, RequireRestart = false, HintText = "A multiplier for how much roguery experience is awarded on initially taking a hideout")]
+    [SettingPropertyGroup("Hideout Experience")]
+    public float TakeHideoutExpMultiplier { get; set; } = 1.0f;
+
+    [SettingPropertyFloatingInteger("Hideout ownership roguery gain multiplier", 0.0f, 10.0f, RequireRestart = false, HintText = "A multiplier for how much roguery experience is awarded daily for each hideout owned")]
+    [SettingPropertyGroup("Hideout Experience")]
+    public float HideoutOwnershipExpMultipier { get; set; } = 1.0f;
   }
 }

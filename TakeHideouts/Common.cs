@@ -118,6 +118,8 @@ namespace TakeHideouts
 
     public static bool IsOwnedHideout(Hideout hideout)
     {
+      if (hideout == null)
+        return false;
       if (hideout.Settlement == null)
         return false;
       return hideout.Settlement.SettlementTaken; // hideout.Settlement.Owner == Hero.MainHero;

@@ -55,6 +55,7 @@ namespace TakeHideouts
       gameInitializer.AddBehavior(new HideoutOwnershipBehavior());
       gameInitializer.AddBehavior(new AiOwnedBanditBehavior());
       gameInitializer.AddBehavior(new WaitInHideoutBehavior());
+      gameInitializer.AddBehavior(new HideoutRogueryBehavior());
     }
   }
 }
