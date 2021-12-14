@@ -163,17 +163,13 @@ namespace TakeHideouts
     {
       if (__instance.MemberTransferState == PartyScreenLogic.TransferState.TransferableWithTrade && command.Type == PartyScreenLogic.TroopType.Member)
       {
-        //TODO this doesn't show gold change as you add/remove troops
+        int troop_price = Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
+        if (command.Character.Occupation == Occupation.Bandit)
+          troop_price *= TakeHideoutsSettings.Instance.BanditRecruitmentCostMultiplier;
         if (command.RosterSide == PartyScreenLogic.PartyRosterSide.Right)
-        {
-          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount + Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
-          //__instance.CurrentData.PartyGoldChangeAmount += Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
-        }
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount + troop_price);
         else
-        {
-          //__instance.CurrentData.PartyGoldChangeAmount -= Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber;
-          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount - Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero) * command.TotalNumber);
-        }
+          ExposeInternals.SetPartyGoldChangeAmount(__instance, __instance.CurrentData.PartyGoldChangeAmount - troop_price);
         //InformationManager.DisplayMessage(new InformationMessage($"Transferrable with trade! changed gold amount to {__instance.CurrentData.PartyGoldChangeAmount}... ransom value {Campaign.Current.Models.RansomValueCalculationModel.PrisonerRansomValue(command.Character, Hero.MainHero)}, number {command.TotalNumber}"));
       }
     }

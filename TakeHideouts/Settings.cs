@@ -43,6 +43,10 @@ namespace TakeHideouts
     [SettingPropertyGroup("Recruit Bandits")]
     public bool RecruitingBanditsEnabled { get; set; } = true;
 
+    [SettingPropertyInteger("Bandit recruitment cost multiplier", 0, 20, RequireRestart = false, HintText = "A multiplier for how much bandit troops cost when recruiting from hideouts")]
+    [SettingPropertyGroup("Recruit Bandits")]
+    public int BanditRecruitmentCostMultiplier { get; set; } = 5;
+
     [SettingPropertyBool("Hideout Patrol Creation Enabled", RequireRestart = false, HintText = "Allows the creation of bandit patrol parties.")]
     [SettingPropertyGroup("Bandit Patrols")]
     public bool HideoutPatrolsEnabled { get; set; } = true;
@@ -85,5 +89,9 @@ namespace TakeHideouts
     [SettingPropertyFloatingInteger("Hideout ownership roguery gain multiplier", 0.0f, 10.0f, RequireRestart = false, HintText = "A multiplier for how much roguery experience is awarded daily for each hideout owned")]
     [SettingPropertyGroup("Hideout Experience")]
     public float HideoutOwnershipExpMultipier { get; set; } = 1.0f;
+
+    [SettingPropertyFloatingInteger("Bandit recruitment roguery gain multiplier", 0.0f, 10.0f, RequireRestart = false, HintText = "A multiplier for how much roguery experience is awarded when recruiting bandits from hideouts")]
+    [SettingPropertyGroup("Hideout Experience")]
+    public float BanditRecruitmentExpMultiplier { get; set; } = 1.0f;
   }
 }

@@ -30,6 +30,9 @@ namespace TakeHideouts
       partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenAdditions.TroopOnlyLeftTransferableDelegate));
 // partyScreenLogic.SetDoneHandler(new PartyPresentationDoneButtonDelegate(PartyScreenAdditions.partyEmptyDoneHandler));
       partyScreenLogic.Parties[0].Add(partyToBuyFrom.MobileParty);
+
+      partyScreenLogic.PartyPresentationDoneButtonDelegate += HideoutRogueryBehavior.PartyScreenDoneDelegate;
+
       ExposeInternals.SetIsDonating(PartyScreenManager.Instance, false);
 
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();

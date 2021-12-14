@@ -35,6 +35,28 @@ namespace TakeHideouts
       Hero.MainHero.AddSkillXp(DefaultSkills.Roguery, exp_amount);
     }
 
+    //intended to be used when you buy bandit troops
+    public static bool PartyScreenDoneDelegate(TroopRoster leftMemberRoster,
+      TroopRoster leftPrisonRoster,
+      TroopRoster rightMemberRoster,
+      TroopRoster rightPrisonRoster,
+      FlattenedTroopRoster takenPrisonerRoster,
+      FlattenedTroopRoster releasedPrisonerRoster,
+      bool isForced,
+      List<MobileParty> leftParties = null,
+      List<MobileParty> rigthParties = null)
+    {
+      ref PartyScreenLogic partyScreenLogic = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenLogic>(PartyScreenManager.Instance, "_partyScreenLogic");
+      float gold_amount = partyScreenLogic.CurrentData.PartyGoldChangeAmount;
+
+      if (gold_amount < 0) //then they are buying bandits
+      {
+        float exp_amount = -gold_amount * 0.2f * TakeHideoutsSettings.Instance.BanditRecruitmentExpMultiplier;
+        Hero.MainHero.AddSkillXp(DefaultSkills.Roguery, exp_amount);
+      }
+      return true;
+    }
+
     //give the hero roguery exp for taking a hideout
     public void OnSettlementOwnerChanged(Settlement settlement,
       bool openToClaim,
