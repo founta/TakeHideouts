@@ -76,12 +76,12 @@ namespace TakeHideouts
 
       if (Common.IsOwnedHideout(hideout))
       {
-        PartyScreenAdditions.OpenPartyScreenAsManageParty(party.Party);
+        PartyScreenAdditions.OpenPartyScreenAsManageParty(party);
         //InformationManager.DisplayMessage(new InformationMessage($"Manage owned hideout troops"));
       }
       else
       {
-        PartyScreenAdditions.OpenPartyScreenAsBuyTroops(party.Party);
+        PartyScreenAdditions.OpenPartyScreenAsBuyTroops(party);
         //InformationManager.DisplayMessage(new InformationMessage($"Purchase hideout troops"));
       }
     }

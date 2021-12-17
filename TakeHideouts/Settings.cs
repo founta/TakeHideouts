@@ -10,6 +10,9 @@ using MCM.Abstractions.Attributes;
 using MCM.Abstractions.Attributes.v2;
 using MCM.Abstractions.Settings.Base.Global;
 
+using HarmonyLib;
+
+
 namespace TakeHideouts
 {
   public class TakeHideoutsSettings : AttributeGlobalSettings<TakeHideoutsSettings>
@@ -64,11 +67,6 @@ namespace TakeHideouts
       "when out of view distance, like with armies or caravans.")]
     [SettingPropertyGroup("Bandit Patrols")]
     public bool ShowBanditPatrolMobilePartyTracker { get; set; } = false;
-    
-    [SettingPropertyBool("Give Created Patrol Parties Food", RequireRestart = false, HintText = "Whether or not to give created bandit patrols grain. " +
-      "The player is charged based on the amount of grain given.")]
-    [SettingPropertyGroup("Bandit Patrols")]
-    public bool GiveNewPatrolsGrain { get; set; } = false;
 
 
     [SettingPropertyBool("Enable Bandit Patrols Submenu", RequireRestart = false, HintText = "Whether or not to group hideout patrol menu options inside a submenu. " +

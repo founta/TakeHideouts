@@ -43,8 +43,8 @@ namespace TakeHideouts
       FlattenedTroopRoster takenPrisonerRoster,
       FlattenedTroopRoster releasedPrisonerRoster,
       bool isForced,
-      List<MobileParty> leftParties = null,
-      List<MobileParty> rigthParties = null)
+      PartyBase leftParty = null,
+      PartyBase rigthParty = null)
     {
       ref PartyScreenLogic partyScreenLogic = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenLogic>(PartyScreenManager.Instance, "_partyScreenLogic");
       float gold_amount = partyScreenLogic.CurrentData.PartyGoldChangeAmount;

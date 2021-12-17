@@ -143,37 +143,7 @@ namespace TakeHideouts
       Common.SetAsOwnedHideoutParty(banditParty, hideout);
 
       //allow user to add their own troops
-      PartyScreenAdditions.OpenPartyScreenAsNewParty(banditParty.Party, doneDelegateOverride: newPartyDoneHandler);
-    }
-
-    //kill the party if no more troops. Also give food based on number of troops
-    //and charge player
-    public static bool newPartyDoneHandler(
-      TroopRoster leftMemberRoster,
-      TroopRoster leftPrisonRoster,
-      TroopRoster rightMemberRoster,
-      TroopRoster rightPrisonRoster,
-      FlattenedTroopRoster takenPrisonerRoster,
-      FlattenedTroopRoster releasedPrisonerRoster,
-      bool isForced,
-      List<MobileParty> leftParties = null,
-      List<MobileParty> rigthParties = null)
-    {
-      Common.RemoveEmptyParties(leftParties);
-      if (TakeHideoutsSettings.Instance.GiveNewPatrolsGrain)
-      {
-        foreach (MobileParty party in leftParties)
-        {
-          //give new party grains so it doesn't starve
-          int numGrains = party.Party.NumberOfRegularMembers;
-          Common.GivePartyGrain(party, numGrains);
-
-          //charge player for grains given
-          Hero.MainHero.ChangeHeroGold(-DefaultItems.Grain.Value * numGrains);
-        }
-      }
-
-      return true;
+      PartyScreenAdditions.OpenPartyScreenAsNewParty(banditParty);
     }
 
     public static bool patrol_recall_condition(MenuCallbackArgs args)

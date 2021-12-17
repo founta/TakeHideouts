@@ -27,7 +27,7 @@ namespace TakeHideouts
       ref InventoryLogic inventoryLogic = ref AccessTools.FieldRefAccess<InventoryManager, InventoryLogic>(InventoryManager.Instance, "_inventoryLogic");
 
       currentMode = InventoryMode.Stash;
-      inventoryLogic = new InventoryLogic(Campaign.Current, (PartyBase)null);
+      inventoryLogic = new InventoryLogic((PartyBase)null);
       inventoryLogic.Initialize(roster, MobileParty.MainParty, false, false, CharacterObject.PlayerCharacter, focus, 
         ExposeInternals.GetCurrentMarketData(InventoryManager.Instance), false, new TextObject(header));
       InventoryState state = Game.Current.GameStateManager.CreateState<InventoryState>();

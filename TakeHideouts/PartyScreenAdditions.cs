@@ -17,36 +17,36 @@ namespace TakeHideouts
   class PartyScreenAdditions
   {
     //This is horrifying
-    public static void OpenPartyScreenAsBuyTroops(PartyBase partyToBuyFrom)
+    public static void OpenPartyScreenAsBuyTroops(MobileParty partyToBuyFrom)
     {
       //get access to private _currentMode and _partyScreenLogic from PartyScreenManager
       ref PartyScreenMode currentMode = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenMode>(PartyScreenManager.Instance, "_currentMode");
       ref PartyScreenLogic partyScreenLogic = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenLogic>(PartyScreenManager.Instance, "_partyScreenLogic");
+
       //harmony patch in PartyScreenLogic is what allows buying troops with TransferableWithTrade set as the transfer type
       currentMode = PartyScreenMode.TroopsManage;
       partyScreenLogic = new PartyScreenLogic();
-      partyScreenLogic.Initialize(partyToBuyFrom, MobileParty.MainParty, new TaleWorlds.Localization.TextObject("Recruit Bandits"), new PartyPresentationDoneButtonDelegate(PartyScreenAdditions.partyEmptyDoneHandler));
-      partyScreenLogic.InitializeTrade(PartyScreenLogic.TransferState.TransferableWithTrade, PartyScreenLogic.TransferState.NotTransferable, PartyScreenLogic.TransferState.NotTransferable);
-      partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenAdditions.TroopOnlyLeftTransferableDelegate));
-// partyScreenLogic.SetDoneHandler(new PartyPresentationDoneButtonDelegate(PartyScreenAdditions.partyEmptyDoneHandler));
-      partyScreenLogic.Parties[0].Add(partyToBuyFrom.MobileParty);
-
-      partyScreenLogic.PartyPresentationDoneButtonDelegate += HideoutRogueryBehavior.PartyScreenDoneDelegate;
-
       ExposeInternals.SetIsDonating(PartyScreenManager.Instance, false);
+
+      IsTroopTransferableDelegate troopTransferableDelegate = new IsTroopTransferableDelegate(PartyScreenAdditions.TroopOnlyLeftTransferableDelegate);
+      PartyPresentationDoneButtonDelegate doneButtonDelegate = new PartyPresentationDoneButtonDelegate(partyEmptyDoneHandler);
+      doneButtonDelegate += HideoutRogueryBehavior.PartyScreenDoneDelegate;
+
+      partyScreenLogic.Initialize(PartyScreenLogicInitializationData.CreateBasicInitDataWithMainPartyAndOther(partyToBuyFrom, PartyScreenLogic.TransferState.TransferableWithTrade, PartyScreenLogic.TransferState.NotTransferable, PartyScreenLogic.TransferState.NotTransferable,
+        troopTransferableDelegate, new TaleWorlds.Localization.TextObject("Manage Party"), doneButtonDelegate));
 
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
       state.InitializeLogic(partyScreenLogic);
       Game.Current.GameStateManager.PushState((GameState)state);
     }
 
-    public static void OpenPartyScreenAsNewParty(PartyBase newParty, int partyLimitOverride = -1, PartyPresentationDoneButtonDelegate doneDelegateOverride = null)
+    public static void OpenPartyScreenAsNewParty(MobileParty newParty, int partyLimitOverride = -1, PartyPresentationDoneButtonDelegate doneDelegateOverride = null)
     {
       //get access to private _currentMode and _partyScreenLogic from PartyScreenManager
       ref PartyScreenMode currentMode = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenMode>(PartyScreenManager.Instance, "_currentMode");
       ref PartyScreenLogic partyScreenLogic = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenLogic>(PartyScreenManager.Instance, "_partyScreenLogic");
 
-      int partyLimit = newParty.PartySizeLimit;
+      int partyLimit = newParty.Party.PartySizeLimit;
       if (partyLimitOverride > 0)
         partyLimit = partyLimitOverride;
 
@@ -59,31 +59,34 @@ namespace TakeHideouts
       //harmony patch in PartyScreenLogic is what allows buying troops with TransferableWithTrade set as the transfer type
       currentMode = PartyScreenMode.TroopsManage;
       partyScreenLogic = new PartyScreenLogic();
-      //partyScreenLogic.Initialize(newParty, MobileParty.MainParty, new TaleWorlds.Localization.TextObject("Create New Party"));
-      partyScreenLogic.Initialize(newParty, MobileParty.MainParty, false, new TaleWorlds.Localization.TextObject("Create New Bandit Party"), partyLimit, new PartyPresentationDoneButtonDelegate(doneDelegate), new TaleWorlds.Localization.TextObject("Create New Party"));
-      partyScreenLogic.InitializeTrade(PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable, PartyScreenLogic.TransferState.NotTransferable);
-      partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate));
+      ExposeInternals.SetIsDonating(PartyScreenManager.Instance, false);
 
-      //partyScreenLogic.SetDoneHandler();
-      partyScreenLogic.Parties[0].Add(newParty.MobileParty);
+      IsTroopTransferableDelegate troopTransferableDelegate = new IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate);
+      PartyPresentationDoneButtonDelegate doneButtonDelegate = new PartyPresentationDoneButtonDelegate(partyEmptyDoneHandler);
+      partyScreenLogic.Initialize(PartyScreenLogicInitializationData.CreateBasicInitDataWithMainPartyAndOther(newParty, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable, PartyScreenLogic.TransferState.NotTransferable,
+        troopTransferableDelegate, new TaleWorlds.Localization.TextObject("Create New Bandit Party"), doneDelegate));
+
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
       state.InitializeLogic(partyScreenLogic);
       Game.Current.GameStateManager.PushState((GameState)state);
     }
 
-    public static void OpenPartyScreenAsManageParty(PartyBase party)
+    public static void OpenPartyScreenAsManageParty(MobileParty party)
     {
       //get access to private _currentMode and _partyScreenLogic from PartyScreenManager
       ref PartyScreenMode currentMode = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenMode>(PartyScreenManager.Instance, "_currentMode");
       ref PartyScreenLogic partyScreenLogic = ref AccessTools.FieldRefAccess<PartyScreenManager, PartyScreenLogic>(PartyScreenManager.Instance, "_partyScreenLogic");
 
       //harmony patch in PartyScreenLogic is what allows buying troops with TransferableWithTrade set as the transfer type
-      currentMode = PartyScreenMode.Loot;
+      currentMode = PartyScreenMode.TroopsManage;
       partyScreenLogic = new PartyScreenLogic();
-      partyScreenLogic.Initialize(party, MobileParty.MainParty, new TaleWorlds.Localization.TextObject("Manage Party"), new PartyPresentationDoneButtonDelegate(PartyScreenAdditions.partyEmptyDoneHandler));
-      partyScreenLogic.InitializeTrade(PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable);
-      partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate));
-      partyScreenLogic.Parties[0].Add(party.MobileParty);
+      ExposeInternals.SetIsDonating(PartyScreenManager.Instance, false);
+
+      IsTroopTransferableDelegate troopTransferableDelegate = new IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate);
+      PartyPresentationDoneButtonDelegate doneButtonDelegate = new PartyPresentationDoneButtonDelegate(partyEmptyDoneHandler);
+      partyScreenLogic.Initialize(PartyScreenLogicInitializationData.CreateBasicInitDataWithMainPartyAndOther(party, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable,
+        troopTransferableDelegate, new TaleWorlds.Localization.TextObject("Manage Party"), doneButtonDelegate));
+
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
       state.InitializeLogic(partyScreenLogic);
       Game.Current.GameStateManager.PushState((GameState)state);
@@ -98,10 +101,13 @@ namespace TakeHideouts
       //harmony patch in PartyScreenLogic is what allows buying troops with TransferableWithTrade set as the transfer type
       currentMode = PartyScreenMode.TroopsManage;
       partyScreenLogic = new PartyScreenLogic();
-      partyScreenLogic.Initialize(party, MobileParty.MainParty, new TaleWorlds.Localization.TextObject("Manage Party"), new PartyPresentationDoneButtonDelegate(doNothingDoneHandler));
-      partyScreenLogic.InitializeTrade(PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable);
-      partyScreenLogic.SetTroopTransferableDelegate(new PartyScreenLogic.IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate));
-      partyScreenLogic.Parties[0].Add(party.MobileParty);
+      ExposeInternals.SetIsDonating(PartyScreenManager.Instance, false);
+
+      IsTroopTransferableDelegate troopTransferableDelegate = new IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate);
+      PartyPresentationDoneButtonDelegate doneButtonDelegate = new PartyPresentationDoneButtonDelegate(doNothingDoneHandler);
+      partyScreenLogic.Initialize(PartyScreenLogicInitializationData.CreateBasicInitDataWithMainParty(party.MemberRoster, null, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable,
+        troopTransferableDelegate, party, header: new TaleWorlds.Localization.TextObject("Manage Party"), partyPresentationDoneButtonDelegate: doneButtonDelegate));
+
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
       state.InitializeLogic(partyScreenLogic);
       Game.Current.GameStateManager.PushState((GameState)state);
@@ -114,8 +120,8 @@ namespace TakeHideouts
       PartyScreenLogic.PartyRosterSide side,
       PartyBase leftOwnerParty)
     {
-      CharacterObject leader = leftOwnerParty?.Leader;
-      bool flag = leader != null && leader.IsHero && leader.HeroObject.Clan == Clan.PlayerClan || leftOwnerParty != null && leftOwnerParty.IsMobile && (leftOwnerParty.MobileParty.IsCaravan && leftOwnerParty.Owner == Hero.MainHero) || leftOwnerParty != null && leftOwnerParty.IsMobile && leftOwnerParty.MobileParty.IsGarrison && leftOwnerParty.MobileParty.CurrentSettlement?.OwnerClan == Clan.PlayerClan;
+      Hero leader = leftOwnerParty.LeaderHero;
+      bool flag = leader != null && leader.Clan == Clan.PlayerClan || leftOwnerParty != null && leftOwnerParty.IsMobile && (leftOwnerParty.MobileParty.IsCaravan && leftOwnerParty.Owner == Hero.MainHero) || leftOwnerParty != null && leftOwnerParty.IsMobile && leftOwnerParty.MobileParty.IsGarrison && leftOwnerParty.MobileParty.CurrentSettlement?.OwnerClan == Clan.PlayerClan;
       if (!character.IsHero && side == PartyScreenLogic.PartyRosterSide.Left) //only addition is here (side==left)
         return true;
       if (!character.IsHero || character.HeroObject.Clan == Clan.PlayerClan)
@@ -133,10 +139,12 @@ namespace TakeHideouts
       FlattenedTroopRoster takenPrisonerRoster,
       FlattenedTroopRoster releasedPrisonerRoster,
       bool isForced,
-      List<MobileParty> leftParties = null,
-      List<MobileParty> rigthParties = null)
+      PartyBase leftParty = null,
+      PartyBase rigthParty = null)
     {
-      Common.RemoveEmptyParties(leftParties);
+      if (leftParty != null && leftParty.MobileParty != null)
+        if (leftParty.MobileParty.MemberRoster.Count == 0)
+          leftParty.MobileParty.RemoveParty();
       return true;
     }
 
@@ -148,8 +156,8 @@ namespace TakeHideouts
       FlattenedTroopRoster takenPrisonerRoster,
       FlattenedTroopRoster releasedPrisonerRoster,
       bool isForced,
-      List<MobileParty> leftParties = null,
-      List<MobileParty> rigthParties = null)
+      PartyBase leftParty = null,
+      PartyBase rigthParty = null)
     {
       return true;
     }

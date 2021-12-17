@@ -204,8 +204,8 @@ namespace TakeHideouts
         }
       }
       MobileParty banditParty = BanditPartyComponent.CreateBanditParty("takehideouts_party", banditClan, hideout, isBoss); //MBObjectManager.Instance.CreateObject<MobileParty>();
-      banditParty.InitializeMobileParty(hideout.Settlement.Culture.BanditBossPartyTemplate,
-        hideout.Settlement.Position2D, 0.0f, 0.0f); //name? id?
+      banditParty.InitializeMobilePartyAtPosition(hideout.Settlement.Culture.BanditBossPartyTemplate,
+        hideout.Settlement.Position2D); //name? id?
 
       banditParty.InitializePartyTrade(initialGold);
 //      Common.GivePartyGrain(banditParty, 20);
