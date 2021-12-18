@@ -226,6 +226,13 @@ namespace TakeHideouts
         affirmativeAction, Common.inquiry_do_nothing));
     }
 
+    public static bool IsBanditBossParty(MobileParty party)
+    {
+      if (party.BanditPartyComponent == null)
+        return false;
+      return party.BanditPartyComponent.IsBossParty;
+    }
+
     public static List<InquiryElement> GetHideoutPartyInquiryElements(Hideout hideout, bool showFood = false)
     {
       List<InquiryElement> elements = new List<InquiryElement>();
@@ -233,7 +240,7 @@ namespace TakeHideouts
       int banditPartyCounter = 1;
       foreach (MobileParty party in hideout.Settlement.Parties)
       {
-        if (!party.IsBanditBossParty && (party != MobileParty.MainParty))
+        if (!Common.IsBanditBossParty(party) && (party != MobileParty.MainParty))
         {
           //don't show parties with no troops, because those can exist apparently
           if (party.Party.MemberRoster.Count <= 0)
