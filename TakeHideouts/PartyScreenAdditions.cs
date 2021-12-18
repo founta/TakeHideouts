@@ -105,7 +105,7 @@ namespace TakeHideouts
 
       IsTroopTransferableDelegate troopTransferableDelegate = new IsTroopTransferableDelegate(PartyScreenManager.TroopTransferableDelegate);
       PartyPresentationDoneButtonDelegate doneButtonDelegate = new PartyPresentationDoneButtonDelegate(doNothingDoneHandler);
-      partyScreenLogic.Initialize(PartyScreenLogicInitializationData.CreateBasicInitDataWithMainParty(party.MemberRoster, null, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable,
+      partyScreenLogic.Initialize(PartyScreenLogicInitializationData.CreateBasicInitDataWithMainParty(party.MemberRoster, party.PrisonRoster, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.Transferable, PartyScreenLogic.TransferState.NotTransferable,
         troopTransferableDelegate, party, header: new TaleWorlds.Localization.TextObject("Manage Party"), partyPresentationDoneButtonDelegate: doneButtonDelegate));
 
       PartyState state = Game.Current.GameStateManager.CreateState<PartyState>();
