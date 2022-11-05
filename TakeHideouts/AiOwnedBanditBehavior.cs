@@ -48,7 +48,7 @@ namespace TakeHideouts
         if (ownedHideouts.Count == 0)
           return;
         mobileParty.SetCustomHomeSettlement(ownedHideouts[0].Settlement);
-        MBInformationManager.AddQuickInformation(new TextObject($"Corrupted owned bandit party re-homed"));
+        //MBInformationManager.AddQuickInformation(new TextObject($"Corrupted owned bandit party re-homed"));
       }
 
       //InformationManager.DisplayMessage(new InformationMessage($"computing owned bandit decisions"));

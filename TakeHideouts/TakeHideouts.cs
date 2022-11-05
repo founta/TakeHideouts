@@ -38,7 +38,7 @@ namespace TakeHideouts
     {
       base.OnBeforeInitialModuleScreenSetAsRoot();
       
-      MBInformationManager.AddQuickInformation(new TextObject($"TakeHideouts {TakeHideoutsSettings.Instance.version}, for Bannerlord 1.9.0"));
+      //MBInformationManager.AddQuickInformation(new TextObject($"TakeHideouts {TakeHideoutsSettings.Instance.version}, for Bannerlord 1.9.0"));
 
       if (harmony == null)
       {

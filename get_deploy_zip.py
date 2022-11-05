@@ -2,11 +2,11 @@ from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 from shutil import copyfile
 
-bin_targets = ['TakeHideouts.dll',  #mod dll
-               '0Harmony.dll',      #harmony
-               'MCMv3.dll',         #MCM
-               'MCMv3.UI.v3.1.9.dll', 'MCMv3.Implementation.v3.1.9.dll', 
-               'Bannerlord.UIExtenderEx.dll']
+bin_targets = ['TakeHideouts.dll']  #mod dll
+  #             '0Harmony.dll'] #,      #harmony
+  #             'MCMv3.dll',         #MCM
+  #             'MCMv3.UI.v3.1.9.dll', 'MCMv3.Implementation.v3.1.9.dll', 
+  #             'Bannerlord.UIExtenderEx.dll']
 base_targets = ['SubModule.xml', 'Harmony_LICENSE.txt', 'MCM_LICENSE.txt']
 
 modules_dir_str = "Modules/"
@@ -28,6 +28,8 @@ base_source_dir = Path("TakeHideouts/")
 zip_targets = []
 
 for target in bin_targets:
+  print(full_bindir)
+  print(target)
   destination = full_bindir / target
   copyfile(bin_source_dir / target, destination)
   zip_targets.append(destination)
