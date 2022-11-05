@@ -5,19 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-using TaleWorlds.Core;
-using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
-using TaleWorlds.CampaignSystem.Actions;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
-using SandBox.View.Map;
-using SandBox.ViewModelCollection.Nameplate;
-using TaleWorlds.ObjectSystem;
+using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.CampaignBehaviors;
+using TaleWorlds.CampaignSystem.Roster;
+using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Localization;
 using TaleWorlds.Library;
-using StoryMode.StoryModeObjects;
 using Helpers;
 
 using HarmonyLib;
@@ -224,7 +219,6 @@ namespace TakeHideouts
       {
         ref Hideout hideout = ref Settlement.CurrentSettlement.Hideout;
         hideout.IsTaken = false;
-        hideout.Settlement.SettlementTaken = false;
         Common.playerHideoutListDirty = true;
 
         //get correct original bandit clan

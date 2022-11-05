@@ -7,26 +7,24 @@ using System.Threading.Tasks;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.GameMenus;
-using TaleWorlds.CampaignSystem.Actions;
-using TaleWorlds.CampaignSystem.SandBox;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.BarterBehaviors;
-using TaleWorlds.CampaignSystem.Barterables;
-using SandBox.View.Map;
+using TaleWorlds.CampaignSystem.Encounters;
+using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Party.PartyComponents;
+using TaleWorlds.CampaignSystem.Roster;
+using TaleWorlds.CampaignSystem.Map;
+using TaleWorlds.CampaignSystem.MapEvents;
+using TaleWorlds.CampaignSystem.Settlements;
+using TaleWorlds.CampaignSystem.CampaignBehaviors;
+using TaleWorlds.CampaignSystem.BarterSystem;
+using TaleWorlds.CampaignSystem.BarterSystem.Barterables;
+using TaleWorlds.CampaignSystem.CampaignBehaviors.BarterBehaviors;
+using TaleWorlds.CampaignSystem.CampaignBehaviors.AiBehaviors;
+using TaleWorlds.CampaignSystem.GameComponents;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.Categories;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement;
-using TaleWorlds.Core.ViewModelCollection;
-using SandBox.ViewModelCollection.MobilePartyTracker;
+using SandBox.Missions.MissionLogics;
+using SandBox.ViewModelCollection.Map;
 using SandBox.ViewModelCollection.Nameplate;
-using TaleWorlds.Library;
-using TaleWorlds.Engine;
-
-using TaleWorlds.CampaignSystem.SandBox.GameComponents.Party;
-using SandBox.Source.Missions;
-
-using TaleWorlds.ObjectSystem;
 
 using HarmonyLib;
 
@@ -270,7 +268,7 @@ public class MissionControllerPatch
       Settlement settlement = hideout.Settlement;
 
       MobileParty newBoss = Common.CreateOwnedBanditPartyInHideout(hideout, isBoss: true); //add a party to prevent hideout from disappearing
-      newBoss.DisableAi();
+      newBoss.IsActive = false;
 
       hideout.IsSpotted = true;
       settlement.IsVisible = true;
@@ -348,7 +346,7 @@ public class MissionControllerPatch
       if (Common.IsOwnedBanditParty(__instance))
       {
         if (Hero.MainHero.Clan.WarPartyComponents.Contains(__instance.WarPartyComponent))
-          ExposeInternals.RemoveWarPartyInternal(Hero.MainHero.Clan, __instance.WarPartyComponent);
+          ExposeInternals.OnWarPartyRemoved(Hero.MainHero.Clan, __instance.WarPartyComponent);
         //ExposeInternals.RemovePartyInternal(Hero.MainHero.Clan, __instance.Party);
         //ExposeInternals.RemoveWarPartyInternal(__instance.ActualClan, __instance);
       }
@@ -358,10 +356,10 @@ public class MissionControllerPatch
   //Patch 
 
   //patch mobile tracker VM so that we can't see bandit parties on the map, if the user wants
-  [HarmonyPatch(typeof(MobilePartyTrackerVM), "InitList")]
+  [HarmonyPatch(typeof(MapMobilePartyTrackerVM), "InitList")]
   public class PartyTrackerPatch
   {
-    static void Postfix(MobilePartyTrackerVM __instance)
+    static void Postfix(MapMobilePartyTrackerVM __instance)
     {
       foreach (WarPartyComponent party in Clan.PlayerClan.WarPartyComponents)
       {
@@ -376,10 +374,10 @@ public class MissionControllerPatch
   }
 
   //patch mobile tracker VM so that we can't see bandit boss parties on the map
-  [HarmonyPatch(typeof(MobilePartyTrackerVM), "InitList")]
+  [HarmonyPatch(typeof(MapMobilePartyTrackerVM), "InitList")]
   public class PartyTrackerBanditBossPatch
   {
-    static void Postfix(MobilePartyTrackerVM __instance)
+    static void Postfix(MapMobilePartyTrackerVM __instance)
     {
       foreach (WarPartyComponent party in Clan.PlayerClan.WarPartyComponents)
       {

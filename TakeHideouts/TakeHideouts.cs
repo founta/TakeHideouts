@@ -7,12 +7,16 @@ using System.Threading.Tasks;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.GameMenus;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
-using SandBox.View.Map;
-
+using TaleWorlds.CampaignSystem.CampaignBehaviors;
+using TaleWorlds.CampaignSystem.Settlements;
+using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Party.PartyComponents;
+using TaleWorlds.CampaignSystem.Inventory;
+using TaleWorlds.CampaignSystem.Roster;
+using SandBox.ViewModelCollection.Map;
+using TaleWorlds.Localization;
+using TaleWorlds.Library;
 
 using System.Xml;
 
@@ -34,7 +38,7 @@ namespace TakeHideouts
     {
       base.OnBeforeInitialModuleScreenSetAsRoot();
       
-      InformationManager.DisplayMessage(new InformationMessage($"TakeHideouts {TakeHideoutsSettings.Instance.version}, for Bannerlord 1.7.0"));
+      MBInformationManager.AddQuickInformation(new TextObject($"TakeHideouts {TakeHideoutsSettings.Instance.version}, for Bannerlord 1.9.0"));
 
       if (harmony == null)
       {

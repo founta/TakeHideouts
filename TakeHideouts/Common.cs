@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Party.PartyComponents;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.Actions;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
+using TaleWorlds.CampaignSystem.Roster;
+using TaleWorlds.CampaignSystem.Settlements;
+using TaleWorlds.CampaignSystem.CampaignBehaviors;
+using TaleWorlds.CampaignSystem.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
-using TaleWorlds.ObjectSystem;
-using TaleWorlds.Localization;
 
 using HarmonyLib;
 
@@ -34,7 +36,7 @@ namespace TakeHideouts
       //that bandit groups still use up slots sometimes but the issue is fixed on 
       //abandoning/re-claiming hideout.
       if (Hero.MainHero.Clan.WarPartyComponents.Contains(party.WarPartyComponent))
-        ExposeInternals.RemoveWarPartyInternal(Hero.MainHero.Clan, party.WarPartyComponent);
+        ExposeInternals.OnWarPartyRemoved(Hero.MainHero.Clan, party.WarPartyComponent);
       //Hero.MainHero.Clan.RemovePartyInternal(party.Party);
     }
 
@@ -79,7 +81,7 @@ namespace TakeHideouts
       //This appears to default false for hideouts and doesn't appear to change anything
       //for the hideouts. hopefully changing it doesn't break anything
       //It looks like it is used for when towns or castles get taken. Should be ok to re-use for hideouts
-      hideout.Settlement.SettlementTaken = true;
+      //hideout.Settlement.SettlementTaken = true;
 
       if (barter)
       {
@@ -122,7 +124,9 @@ namespace TakeHideouts
         return false;
       if (hideout.Settlement == null)
         return false;
-      return hideout.Settlement.SettlementTaken; // hideout.Settlement.Owner == Hero.MainHero;
+      if (hideout.Settlement.Parties.Count == 0)
+        return false;
+      return hideout.Settlement.Parties[0].ActualClan == Hero.MainHero.Clan;
     }
 
     public static void GivePartyGrain(MobileParty party, int howMuch)
@@ -220,7 +224,7 @@ namespace TakeHideouts
 
     public static void OpenSingleSelectInquiry(string headerText, List<InquiryElement> elements, string affirmativeLabel, Action<List<InquiryElement>> affirmativeAction)
     {
-      InformationManager.ShowMultiSelectionInquiry(
+      MBInformationManager.ShowMultiSelectionInquiry(
         new MultiSelectionInquiryData(headerText, "", elements, true, 1,
         affirmativeLabel, "Leave",
         affirmativeAction, Common.inquiry_do_nothing));

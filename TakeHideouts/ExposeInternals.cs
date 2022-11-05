@@ -8,9 +8,13 @@ using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.Towns;
-using SandBox.ViewModelCollection.MobilePartyTracker;
+using TaleWorlds.CampaignSystem.CampaignBehaviors;
+using TaleWorlds.CampaignSystem.Settlements;
+using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Party.PartyComponents;
+using TaleWorlds.CampaignSystem.Inventory;
+using TaleWorlds.CampaignSystem.Roster;
+using SandBox.ViewModelCollection.Map;
 using SandBox.View.Map;
 using TaleWorlds.SaveSystem;
 using SandBox.ViewModelCollection.Nameplate;
@@ -31,8 +35,8 @@ namespace TakeHideouts
     // clan party limit, I think)
     //after removing them from war parties, you can no longer 
     [HarmonyReversePatch]
-    [HarmonyPatch(typeof(Clan), "RemoveWarPartyInternal")]
-    public static void RemoveWarPartyInternal(Clan instance, WarPartyComponent warparty)
+    [HarmonyPatch(typeof(Clan), "OnWarPartyRemoved")]
+    public static void OnWarPartyRemoved(Clan instance, WarPartyComponent warparty)
     {
       return;
     }
@@ -90,8 +94,8 @@ namespace TakeHideouts
     }
 
     [HarmonyReversePatch]
-    [HarmonyPatch(typeof(MobilePartyTrackerVM), "RemoveIfExists", new Type[] { typeof(MobileParty) })]
-    public static void RemoveIfExists(MobilePartyTrackerVM instance, MobileParty party)
+    [HarmonyPatch(typeof(MapMobilePartyTrackerVM), "RemoveIfExists", new Type[] { typeof(MobileParty) })]
+    public static void RemoveIfExists(MapMobilePartyTrackerVM instance, MobileParty party)
     {
       return;
     }

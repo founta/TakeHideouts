@@ -9,7 +9,12 @@ using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.Overlay;
+using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.Localization;
+
+using TaleWorlds.CampaignSystem.Actions;
+using TaleWorlds.CampaignSystem.Roster;
+using TaleWorlds.CampaignSystem.Settlements;
 
 namespace TakeHideouts
 {
@@ -37,7 +42,7 @@ namespace TakeHideouts
     [GameMenuInitializationHandler(submenu_id)]
     public static void stash_submenu_bkg_init(MenuCallbackArgs args)
     {
-      args.MenuContext.SetBackgroundMeshName(Settlement.CurrentSettlement.GetComponent<SettlementComponent>().WaitMeshName);
+      args.MenuContext.SetBackgroundMeshName(Settlement.CurrentSettlement.SettlementComponent.WaitMeshName);
     }
 
     private void stash_submenu_on_init(MenuCallbackArgs args)

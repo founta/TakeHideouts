@@ -7,11 +7,17 @@ using System.Threading.Tasks;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.Actions;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
+using TaleWorlds.CampaignSystem.Roster;
+using TaleWorlds.CampaignSystem.Settlements;
+using TaleWorlds.CampaignSystem.Map;
+using TaleWorlds.CampaignSystem.CampaignBehaviors;
+using TaleWorlds.CampaignSystem.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
+
+using TaleWorlds.Localization;
 
 using HarmonyLib;
 
@@ -42,7 +48,7 @@ namespace TakeHideouts
         if (ownedHideouts.Count == 0)
           return;
         mobileParty.SetCustomHomeSettlement(ownedHideouts[0].Settlement);
-        InformationManager.DisplayMessage(new InformationMessage($"Corrupted owned bandit party re-homed"));
+        MBInformationManager.AddQuickInformation(new TextObject($"Corrupted owned bandit party re-homed"));
       }
 
       //InformationManager.DisplayMessage(new InformationMessage($"computing owned bandit decisions"));

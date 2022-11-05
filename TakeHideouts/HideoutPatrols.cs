@@ -5,20 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 
 using TaleWorlds.Core;
-using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
+using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.Overlay;
-using TaleWorlds.CampaignSystem.Actions;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.AiBehaviors;
-
-using SandBox.ViewModelCollection;
-using TaleWorlds.Engine;
+using TaleWorlds.CampaignSystem.CampaignBehaviors;
+using TaleWorlds.CampaignSystem.Settlements;
+using TaleWorlds.CampaignSystem.Party.PartyComponents;
+using TaleWorlds.CampaignSystem.Inventory;
+using TaleWorlds.CampaignSystem.Roster;
+using SandBox.ViewModelCollection.Map;
+using TaleWorlds.Localization;
 using TaleWorlds.Library;
-using TaleWorlds.Core.ViewModelCollection;
-using SandBox.View.Map;
-using TaleWorlds.GauntletUI;
+using Helpers;
 
 using HarmonyLib;
 
@@ -48,7 +47,7 @@ namespace TakeHideouts
     [GameMenuInitializationHandler(submenu_id)]
     public static void stash_submenu_bkg_init(MenuCallbackArgs args)
     {
-      args.MenuContext.SetBackgroundMeshName(Settlement.CurrentSettlement.GetComponent<SettlementComponent>().WaitMeshName);
+      args.MenuContext.SetBackgroundMeshName(Settlement.CurrentSettlement.SettlementComponent.WaitMeshName);
     }
 
     private void stash_submenu_on_init(MenuCallbackArgs args)
