@@ -219,6 +219,10 @@ namespace TakeHideouts
 
       banditParty.SetMoveGoToSettlement(hideout.Settlement);
       EnterSettlementAction.ApplyForParty(banditParty, hideout.Settlement);
+
+      if (isBoss)
+        banditParty.Ai.DisableAi();
+
       return banditParty;
     }
 
