@@ -17,6 +17,9 @@ namespace TakeHideouts
 {
   public class TakeHideoutsSettings : AttributeGlobalSettings<TakeHideoutsSettings>
   {
+    public override string FolderName => "TakeHideouts";
+    public override string FormatType => "json2";
+
     public TakeHideoutsSettings() : base()
     {
       //read version from xml
