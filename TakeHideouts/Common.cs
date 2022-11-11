@@ -126,7 +126,14 @@ namespace TakeHideouts
         return false;
       if (hideout.Settlement.Parties.Count == 0)
         return false;
-      return hideout.Settlement.Parties[0].ActualClan == Hero.MainHero.Clan;
+      foreach (MobileParty party in hideout.Settlement.Parties)
+      {
+        if ( Common.IsBanditBossParty(party) && (party.ActualClan == Hero.MainHero.Clan))
+        {
+          return true;
+        }
+      }
+      return false;
     }
 
     public static void GivePartyGrain(MobileParty party, int howMuch)
