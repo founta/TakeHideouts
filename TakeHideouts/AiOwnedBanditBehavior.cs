@@ -30,7 +30,7 @@ namespace TakeHideouts
       //exclude all parties, other than owned bandit patrols
       if (!Common.IsOwnedBanditParty(mobileParty))
         return;
-      if (mobileParty.IsVillager || mobileParty.IsMilitia || mobileParty.IsBandit || mobileParty.IsBanditBossParty || mobileParty.IsCaravan || mobileParty.IsGarrison)
+      if (mobileParty.IsVillager || mobileParty.IsMilitia || mobileParty.IsBandit || Common.IsBanditBossParty(mobileParty) || mobileParty.IsCaravan || mobileParty.IsGarrison)
         return;
 
       //if the party is homeless (home settlement not owned hideout) then try to re-home the bandit party
@@ -61,14 +61,14 @@ namespace TakeHideouts
       AIBehaviorTuple returnToHideoutKey = new AIBehaviorTuple((IMapPoint)mobileParty.HomeSettlement, AiBehavior.GoToSettlement);
 
       //have some base desire to either patrol or return to hideout
-      float returnToHideoutScore = 10;
-      float patrolScore = 10;
+      float returnToHideoutScore = 0.1f;
+      float patrolScore = 0.125f;
 
       //if we're currently patrolling or staying at home, tend to keep doing that
       if (mobileParty.DefaultBehavior == AiBehavior.GoToSettlement) //when we recall bandit parties or when they come back to get food
-        returnToHideoutScore += 50;
+        returnToHideoutScore += 5;
       if (mobileParty.DefaultBehavior == AiBehavior.PatrolAroundPoint) //when we have the patrols dispatched
-        patrolScore += 50;
+        patrolScore += 0.125f;
 
       //want to return to hideout if low on food, keep or return to patrolling if fine on food
       //TODO add some random element?
@@ -85,8 +85,18 @@ namespace TakeHideouts
       returnToHideoutScore *= Math.Max(foodImportance, prisonerImportance);
       patrolScore *= (1 - Math.Max(foodImportance, prisonerImportance));
 
-      //InformationManager.DisplayMessage(new InformationMessage($"return score {returnToHideoutScore} (pimportance {prisonerImportance}) patrol score {patrolScore} (fimportance {foodImportance})"));
 
+      /*string text = $"return score {returnToHideoutScore} patrol score {patrolScore} party objective {mobileParty.Objective}";
+
+      foreach (KeyValuePair<AIBehaviorTuple, float> pair in p.AIBehaviorScores)
+      {
+        if (pair.Key.AiBehavior == AiBehavior.EngageParty)
+        {
+          text += $" engage score {pair.Value}";
+        }
+      }
+      MBInformationManager.AddQuickInformation(new TextObject(text));
+      */
 
       //replace keys
       if (p.AIBehaviorScores.ContainsKey(patrolKey))

@@ -25,10 +25,25 @@ namespace TakeHideouts
   {
     public static void SetAsOwnedHideoutParty(MobileParty party, Hideout hideout)
     {
-      party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause (is this the right way to do this?)
-      party.Party.SetCustomOwner(Hero.MainHero); //this makes it so that you can see them in the clan menu, and also so that you can get access to them later.
-      party.SetCustomHomeSettlement(hideout.Settlement); //likely already set to this, doesn't seem to do anything
+      MobileParty orig_party = party;
 
+      if (!IsOwnedBanditParty(party))
+      {
+        if (IsBanditBossParty(party))
+        {
+          party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause (is this the right way to do this?)
+          party.Party.SetCustomOwner(Hero.MainHero); //this makes it so that you can see them in the clan menu, and also so that you can get access to them later.
+        }
+        else
+        {
+          party = OwnedBanditPatrolComponent.CreatePatrolParty("takehideouts_patrol", Hero.MainHero.Clan, hideout);
+          party.MemberRoster.Clear();
+          party.PrisonRoster.Clear();
+          party.MemberRoster.Add(orig_party.MemberRoster.ToFlattenedRoster());
+          party.PrisonRoster.Add(orig_party.PrisonRoster.ToFlattenedRoster());
+        }
+      }
+      party.SetCustomHomeSettlement(hideout.Settlement); //likely already set to this, doesn't seem to do anything
       party.SetMoveGoToSettlement(party.HomeSettlement); //don't disperse when taking hideout
 
       //remove from player's war party list so that these bandits don't use up party slots
@@ -105,6 +120,10 @@ namespace TakeHideouts
       if (party.BanditPartyComponent != null) //then it's a bandit party (we patch IsBandit so we have to use this)
         if (party.ActualClan == Hero.MainHero.Clan)
           return true;
+
+      if ((party.PartyComponent as OwnedBanditPatrolComponent) != null)
+        return true;
+
       /*
       Settlement home = party.HomeSettlement;
       if (home == null)
@@ -205,16 +224,27 @@ namespace TakeHideouts
 
     public static MobileParty CreateOwnedBanditPartyInHideout(Hideout hideout, int initialGold = 300, bool isBoss=false)
     {
-      Clan banditClan = null;
-      foreach (Clan clan in Clan.BanditFactions)
+      MobileParty banditParty;
+      if (isBoss)
       {
-        if (hideout.Settlement.Culture == clan.Culture)
+        Clan banditClan = null;
+        foreach (Clan clan in Clan.BanditFactions)
         {
-          banditClan = clan;
-          break;
+          if (hideout.Settlement.Culture == clan.Culture)
+          {
+            banditClan = clan;
+            break;
+          }
         }
+        banditParty = BanditPartyComponent.CreateBanditParty("takehideouts_party", banditClan, hideout, isBoss);
       }
-      MobileParty banditParty = BanditPartyComponent.CreateBanditParty("takehideouts_party", banditClan, hideout, isBoss); //MBObjectManager.Instance.CreateObject<MobileParty>();
+      else
+      {
+        banditParty = OwnedBanditPatrolComponent.CreatePatrolParty("takehideouts_party", Hero.MainHero.Clan, hideout);
+        banditParty.Aggressiveness = 0.3f;
+        banditParty.SetPartyObjective(MobileParty.PartyObjective.Aggressive);
+      }
+
       banditParty.InitializeMobilePartyAtPosition(hideout.Settlement.Culture.BanditBossPartyTemplate,
         hideout.Settlement.Position2D); //name? id?
 

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using TaleWorlds.Core;
+using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Encounters;
@@ -373,6 +374,21 @@ public class MissionControllerPatch
     }
   }
 
+  //remove newly created patrol parties from the map tracker, as well
+  [HarmonyPatch(typeof(MapMobilePartyTrackerVM), "OnMobilePartyCreated")]
+  public class PartyCreatedTrackerPatch
+  {
+    static void Postfix(MapMobilePartyTrackerVM __instance, MobileParty party)
+    {
+        if (Common.IsOwnedBanditParty(party))
+          ExposeInternals.RemoveIfExists(__instance, party);
+    }
+    static bool Prepare()
+    {
+      return !TakeHideoutsSettings.Instance.ShowBanditPatrolMobilePartyTracker;
+    }
+  }
+
   //patch mobile tracker VM so that we can't see bandit boss parties on the map
   [HarmonyPatch(typeof(MapMobilePartyTrackerVM), "InitList")]
   public class PartyTrackerBanditBossPatch
@@ -618,4 +634,31 @@ public class MissionControllerPatch
       }
     }
   }
+
+  //prevent bandit patrols from visiting settlements
+  [HarmonyPatch(typeof(AiVisitSettlementBehavior), "AiHourlyTick")]
+  public class PatrolSettlementVisitPatch
+  {
+    static bool Prefix(AiVisitSettlementBehavior __instance, MobileParty mobileParty, PartyThinkParams p)
+    {
+      if (Common.IsOwnedBanditParty(mobileParty))
+        return false;
+
+      return true;
+    }
+  }
+
+  [HarmonyPatch(typeof(MobileParty), "GetBestInitiativeBehavior")]
+  public class DebugPrintPatch
+  {
+    static void Postfix(MobileParty __instance, ref AiBehavior bestInitiativeBehavior, ref float bestInitiativeBehaviorScore)
+    {
+      if (Common.IsOwnedBanditParty(__instance))
+      {
+        //string text = $"tc {__instance.MemberRoster.TotalManCount} behavior {bestInitiativeBehavior.ToString()} score {bestInitiativeBehaviorScore}";
+        //MBInformationManager.AddQuickInformation(new TextObject(text));
+      }
+    }
+  }
+
 }

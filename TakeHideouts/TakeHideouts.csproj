@@ -235,6 +235,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AiOwnedBanditBehavior.cs" />
+    <Compile Include="TakeHideoutsSaveableTypeDefiner.cs" />
+    <Compile Include="OwnedBanditPatrolComponent.cs" />
     <Compile Include="HideoutRoguery.cs" />
     <Compile Include="HideoutsAnywhere.cs" />
     <Compile Include="InventoryScreenAdditions.cs" />

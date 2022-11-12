@@ -195,7 +195,7 @@ namespace TakeHideouts
         else if (party != MobileParty.MainParty && !party.IsBanditBossParty)
         {
           party.SetMovePatrolAroundSettlement(hideout.Settlement);
-          party.Ai.SetAIState(AIState.PatrollingAroundLocation);
+          //party.Ai.SetAIState(AIState.PatrollingAroundLocation);
           party.Ai.SetDoNotMakeNewDecisions(false);
           //party.Ai.SetDoNotMakeNewDecisions(true);
         }
