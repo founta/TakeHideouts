@@ -13,6 +13,7 @@ using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.Roster;
 using TaleWorlds.CampaignSystem.Settlements;
+using TaleWorlds.Localization;
 using TaleWorlds.CampaignSystem.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.CampaignBehaviors.AiBehaviors;
 using SandBox.View.Map;
@@ -23,28 +24,27 @@ namespace TakeHideouts
 {
   class Common
   {
+    public static bool IsHideout(Settlement settlement)
+    {
+      return (settlement.Hideout != null);
+    }
+
     public static void SetAsOwnedHideoutParty(MobileParty party, Hideout hideout)
     {
       MobileParty orig_party = party;
 
       if (!IsOwnedBanditParty(party))
       {
-        if (IsBanditBossParty(party))
-        {
-          party.ActualClan = Hero.MainHero.Clan; //convert bandits in the hideout to our cause (is this the right way to do this?)
-          party.Party.SetCustomOwner(Hero.MainHero); //this makes it so that you can see them in the clan menu, and also so that you can get access to them later.
-        }
-        else
-        {
-          party = OwnedBanditPatrolComponent.CreatePatrolParty("takehideouts_patrol", Hero.MainHero.Clan, hideout);
-          party.MemberRoster.Clear();
-          party.PrisonRoster.Clear();
-          party.MemberRoster.Add(orig_party.MemberRoster.ToFlattenedRoster());
-          party.PrisonRoster.Add(orig_party.PrisonRoster.ToFlattenedRoster());
-        }
+        party = CreateOwnedBanditPartyInHideout(hideout, isBoss: IsBanditBossParty(orig_party));
+        party.MemberRoster.Clear();
+        party.PrisonRoster.Clear();
+        party.MemberRoster.Add(orig_party.MemberRoster.ToFlattenedRoster());
+        party.PrisonRoster.Add(orig_party.PrisonRoster.ToFlattenedRoster());
+
+        orig_party.RemoveParty();
       }
       party.SetCustomHomeSettlement(hideout.Settlement); //likely already set to this, doesn't seem to do anything
-      party.SetMoveGoToSettlement(party.HomeSettlement); //don't disperse when taking hideout
+      //party.SetMoveGoToSettlement(party.HomeSettlement); //don't disperse when taking hideout
 
       //remove from player's war party list so that these bandits don't use up party slots
       //is there an actual way to do this (that's not an internal method)?? Users report
@@ -60,8 +60,8 @@ namespace TakeHideouts
       //re-initialize the owned hideout list when next requested
       Common.playerHideoutListDirty = true;
       //InformationManager.DisplayMessage(new InformationMessage($"{hideout.Settlement.Parties.Count} parties"));
-      List<MobileParty> parties_to_replace = new List<MobileParty>();
-      foreach (MobileParty party in hideout.Settlement.Parties)
+      List<MobileParty> original_parties = hideout.Settlement.Parties.ToList();
+      foreach (MobileParty party in original_parties)
       {
         if (party.IsBanditBossParty || party.IsBandit) //convert the bandit leader
         {
@@ -107,6 +107,7 @@ namespace TakeHideouts
       {
         ChangeOwnerOfSettlementAction.ApplyByDefault(Hero.MainHero, hideout.Settlement);
       }
+//      MBInformationManager.AddQuickInformation(new TextObject($"hideout is owned? {Common.IsOwnedHideout(hideout)}"));
     }
 
     public static bool IsOwnedBanditParty(MobileParty party)
@@ -236,7 +237,7 @@ namespace TakeHideouts
             break;
           }
         }
-        banditParty = BanditPartyComponent.CreateBanditParty("takehideouts_party", banditClan, hideout, isBoss);
+        banditParty = BanditPartyComponent.CreateBanditParty("takehideouts_party", Hero.MainHero.Clan, hideout, isBoss);
       }
       else
       {
@@ -251,7 +252,7 @@ namespace TakeHideouts
       banditParty.InitializePartyTrade(initialGold);
 //      Common.GivePartyGrain(banditParty, 20);
 
-      Common.SetAsOwnedHideoutParty(banditParty, hideout);
+      //Common.SetAsOwnedHideoutParty(banditParty, hideout);
       banditParty.Party.Visuals.SetMapIconAsDirty();
 
       banditParty.SetMoveGoToSettlement(hideout.Settlement);

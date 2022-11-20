@@ -20,12 +20,15 @@ using TaleWorlds.CampaignSystem.BarterSystem;
 using TaleWorlds.CampaignSystem.BarterSystem.Barterables;
 using TaleWorlds.CampaignSystem.CampaignBehaviors.BarterBehaviors;
 using TaleWorlds.CampaignSystem.CampaignBehaviors.AiBehaviors;
+using TaleWorlds.CampaignSystem.CampaignBehaviors.CommentBehaviors;
 using TaleWorlds.CampaignSystem.GameComponents;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.Categories;
 using TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement;
 using SandBox.Missions.MissionLogics;
 using SandBox.ViewModelCollection.Map;
 using SandBox.ViewModelCollection.Nameplate;
+
+using Helpers;
 
 using HarmonyLib;
 
@@ -648,6 +651,7 @@ public class MissionControllerPatch
     }
   }
 
+  /*
   [HarmonyPatch(typeof(MobileParty), "GetBestInitiativeBehavior")]
   public class DebugPrintPatch
   {
@@ -658,6 +662,80 @@ public class MissionControllerPatch
         //string text = $"tc {__instance.MemberRoster.TotalManCount} behavior {bestInitiativeBehavior.ToString()} score {bestInitiativeBehaviorScore}";
         //MBInformationManager.AddQuickInformation(new TextObject(text));
       }
+    }
+  }
+  */
+
+  //if the method selects an owned hideout, re-select a non-owned hideout.
+  [HarmonyPatch(typeof(SettlementHelper), "FindNearestHideout")]
+  public class FindNearestHideoutPatch
+  {
+
+    static void Postfix(Func<Settlement, bool> condition, IMapPoint toMapPoint, ref Settlement __result)
+    {
+      if (Common.IsOwnedHideout(__result.Hideout))
+      {
+        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (set.Hideout != null) && (!Common.IsOwnedHideout(set.Hideout));
+
+        if (condition != null)
+        {
+          Func<Settlement, bool> new_cond = set => condition(set) && (!Common.IsOwnedHideout(set.Hideout)) && (set.Hideout != null);
+          __result = SettlementHelper.FindNearestSettlement(new_cond, toMapPoint);
+        }
+        else
+        {
+          __result = SettlementHelper.FindNearestSettlement(is_not_owned_hideout_delegate, toMapPoint);
+        }
+      }
+    }
+  }
+
+  [HarmonyPatch(typeof(SettlementHelper), "FindRandomHideout")]
+  public class FindRandomHideoutPatch
+  {
+    static void Postfix(Func<Settlement, bool> condition, ref Settlement __result)
+    {
+      if (Common.IsOwnedHideout(__result.Hideout))
+      {
+        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (set.Hideout != null) && (!Common.IsOwnedHideout(set.Hideout));
+
+        if (condition != null)
+        {
+          Func<Settlement, bool> new_cond = set => condition(set) && (!Common.IsOwnedHideout(set.Hideout)) && (set.Hideout != null);
+          __result = SettlementHelper.FindRandomSettlement(new_cond);
+        }
+        else
+        {
+          __result = SettlementHelper.FindRandomSettlement(is_not_owned_hideout_delegate);
+        }
+      }
+    }
+  }
+
+  [HarmonyPatch(typeof(CampaignEventDispatcher), "OnSettlementOwnerChanged")]
+  public class OnSettlementOwnerChangedPatch
+  {
+    static void Prefix(CommentOnChangeSettlementOwnerBehavior __instance, Settlement settlement, ref Hero oldOwner)
+    {
+      if (Common.IsHideout(settlement))
+      {
+        if (oldOwner == null)
+          oldOwner = Hero.MainHero;
+      }
+    }
+  }
+
+  [HarmonyPatch(typeof(BanditsCampaignBehavior), "OnSettlementEntered")]
+  public class HideoutEnteredPatch
+  {
+    static bool Prefix(BanditsCampaignBehavior __instance, Settlement settlement)
+    {
+      if (Common.IsHideout(settlement))
+      {
+        if (Common.IsOwnedHideout(settlement.Hideout))
+          return false;
+      }
+      return true;
     }
   }
 
