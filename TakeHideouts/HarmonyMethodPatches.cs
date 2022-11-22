@@ -675,11 +675,11 @@ public class MissionControllerPatch
     {
       if (Common.IsOwnedHideout(__result.Hideout))
       {
-        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (set.Hideout != null) && (!Common.IsOwnedHideout(set.Hideout));
+        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (set != null) && (set.Hideout != null) && (!Common.IsOwnedHideout(set.Hideout));
 
         if (condition != null)
         {
-          Func<Settlement, bool> new_cond = set => condition(set) && (!Common.IsOwnedHideout(set.Hideout)) && (set.Hideout != null);
+          Func<Settlement, bool> new_cond = set => (set != null) && (set.Hideout != null) && condition(set) && (!Common.IsOwnedHideout(set.Hideout));
           __result = SettlementHelper.FindNearestSettlement(new_cond, toMapPoint);
         }
         else
@@ -697,11 +697,11 @@ public class MissionControllerPatch
     {
       if (Common.IsOwnedHideout(__result.Hideout))
       {
-        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (set.Hideout != null) && (!Common.IsOwnedHideout(set.Hideout));
+        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (set != null) && (set.Hideout != null) && (!Common.IsOwnedHideout(set.Hideout));
 
         if (condition != null)
         {
-          Func<Settlement, bool> new_cond = set => condition(set) && (!Common.IsOwnedHideout(set.Hideout)) && (set.Hideout != null);
+          Func<Settlement, bool> new_cond = set => (set != null) && (set.Hideout != null) && condition(set) && (!Common.IsOwnedHideout(set.Hideout));
           __result = SettlementHelper.FindRandomSettlement(new_cond);
         }
         else
