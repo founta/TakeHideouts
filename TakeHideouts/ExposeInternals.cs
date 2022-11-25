@@ -16,12 +16,14 @@ using TaleWorlds.CampaignSystem.Inventory;
 using TaleWorlds.CampaignSystem.Roster;
 using SandBox.ViewModelCollection.Map;
 using SandBox.View.Map;
+using TaleWorlds.CampaignSystem.Map;
 using TaleWorlds.SaveSystem;
 using SandBox.ViewModelCollection.Nameplate;
 
 using TaleWorlds.Library;
 
 using HarmonyLib;
+using Helpers;
 
 namespace TakeHideouts
 {
@@ -186,6 +188,20 @@ namespace TakeHideouts
     public static void RefreshRelationsOfNameplates(SettlementNameplatesVM __instance)
     {
       return;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(SettlementHelper), "FindNearestSettlementToMapPointInternal")]
+    public static Settlement FindNearestSettlementToMapPointInternal(IMapPoint mapPoint, IEnumerable<Settlement> settlementsToIterate, Func<Settlement,bool> condition=null)
+    {
+      return (Settlement)null;
+    }
+
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(SettlementHelper), "FindRandomInternal")]
+    public static Settlement FindRandomInternal(Func<Settlement, bool> condition, IEnumerable<Settlement> settlementsToIterate)
+    {
+      return (Settlement)null;
     }
 
     /*

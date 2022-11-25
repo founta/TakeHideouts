@@ -673,19 +673,22 @@ public class MissionControllerPatch
 
     static void Postfix(Func<Settlement, bool> condition, IMapPoint toMapPoint, ref Settlement __result)
     {
+      if (__result == null)
+        return;
+      if (__result.Hideout == null)
+        return;
+
       if (Common.IsOwnedHideout(__result.Hideout))
       {
-        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (set != null) && (set.Hideout != null) && (!Common.IsOwnedHideout(set.Hideout));
+        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (!Common.IsOwnedHideout(set.Hideout));
 
         if (condition != null)
         {
-          Func<Settlement, bool> new_cond = set => (set != null) && (set.Hideout != null) && condition(set) && (!Common.IsOwnedHideout(set.Hideout));
-          __result = SettlementHelper.FindNearestSettlement(new_cond, toMapPoint);
+          is_not_owned_hideout_delegate = set => (!Common.IsOwnedHideout(set.Hideout)) && condition(set);
         }
-        else
-        {
-          __result = SettlementHelper.FindNearestSettlement(is_not_owned_hideout_delegate, toMapPoint);
-        }
+
+        __result = ExposeInternals.FindNearestSettlementToMapPointInternal(toMapPoint ?? (IMapPoint)MobileParty.MainParty, 
+          Hideout.All.Select<Hideout, Settlement>((Func<Hideout, Settlement>)(x => x.Settlement)), is_not_owned_hideout_delegate);
       }
     }
   }
@@ -695,19 +698,21 @@ public class MissionControllerPatch
   {
     static void Postfix(Func<Settlement, bool> condition, ref Settlement __result)
     {
+      if (__result == null)
+        return;
+      if (__result.Hideout == null)
+        return;
       if (Common.IsOwnedHideout(__result.Hideout))
       {
-        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (set != null) && (set.Hideout != null) && (!Common.IsOwnedHideout(set.Hideout));
+        Func<Settlement, bool> is_not_owned_hideout_delegate = set => (!Common.IsOwnedHideout(set.Hideout));
 
         if (condition != null)
         {
-          Func<Settlement, bool> new_cond = set => (set != null) && (set.Hideout != null) && condition(set) && (!Common.IsOwnedHideout(set.Hideout));
-          __result = SettlementHelper.FindRandomSettlement(new_cond);
+          is_not_owned_hideout_delegate = set => (!Common.IsOwnedHideout(set.Hideout)) && condition(set);
         }
-        else
-        {
-          __result = SettlementHelper.FindRandomSettlement(is_not_owned_hideout_delegate);
-        }
+
+        __result = ExposeInternals.FindRandomInternal(is_not_owned_hideout_delegate,
+          Hideout.All.Select<Hideout, Settlement>((Func<Hideout, Settlement>)(x => x.Settlement)));
       }
     }
   }
